@@ -4,6 +4,8 @@ import helmet from 'helmet';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import * as express from 'express';
+import { join } from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -40,6 +42,9 @@ async function bootstrap() {
   );
 
   app.useGlobalFilters(new AllExceptionsFilter());
+
+  // Serve uploaded cake images
+  app.use('/uploads', express.static(join(process.cwd(), 'uploads')));
 
   const port = config.get<number>('port', 3000);
   await app.listen(port);

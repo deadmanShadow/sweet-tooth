@@ -8,6 +8,7 @@ import { DatabaseModule } from './database/database.module';
 import { HealthModule } from './modules/health/health.module';
 import { EchoModule } from './modules/echo/echo.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { CakesModule } from './modules/cakes/cakes.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { AuthModule } from './modules/auth/auth.module';
     HealthModule,
     EchoModule,
     AuthModule,
+    CakesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
