@@ -4,8 +4,10 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import configuration from './config/configuration';
 import { envValidationSchema } from './config/validate';
+import { DatabaseModule } from './database/database.module';
 import { HealthModule } from './modules/health/health.module';
 import { EchoModule } from './modules/echo/echo.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -15,8 +17,10 @@ import { EchoModule } from './modules/echo/echo.module';
       load: [configuration],
       validationSchema: envValidationSchema,
     }),
+    DatabaseModule,
     HealthModule,
     EchoModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
