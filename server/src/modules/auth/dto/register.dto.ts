@@ -12,4 +12,3 @@ export class RegisterDto {
   @Length(2, 100)
   name!: string;
 }
-

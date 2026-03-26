@@ -1,5 +1,5 @@
-import { IsBoolean, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 import { Type } from 'class-transformer';
+import { IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
 export class UpdateCakeDto {
   @IsOptional()
@@ -16,4 +16,3 @@ export class UpdateCakeDto {
   @IsString()
   description?: string;
 }
-

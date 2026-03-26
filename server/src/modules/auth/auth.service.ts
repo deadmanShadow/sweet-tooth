@@ -1,4 +1,8 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
@@ -64,8 +68,15 @@ export class AuthService {
     const user = await this.users.findById(userId);
     if (!user) throw new UnauthorizedException('Invalid user');
 
-    const payload: JwtPayload = { sub: user.id, email: user.email, role: user.role };
-    const expiresIn = this.config.get<string>('jwt.accessExpiresIn', '1d') as StringValue;
+    const payload: JwtPayload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+    };
+    const expiresIn = this.config.get<string>(
+      'jwt.accessExpiresIn',
+      '1d',
+    ) as StringValue;
 
     const accessToken = await this.jwt.signAsync(payload, { expiresIn });
     return { accessToken, tokenType: 'Bearer' as const, expiresIn };
@@ -77,4 +88,3 @@ export class AuthService {
     return rest;
   }
 }
-

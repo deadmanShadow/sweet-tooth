@@ -5,4 +5,3 @@ export type JwtPayload = {
   email: string;
   role: UserRole;
 };
-

@@ -5,10 +5,10 @@ import { AppService } from './app.service';
 import configuration from './config/configuration';
 import { envValidationSchema } from './config/validate';
 import { DatabaseModule } from './database/database.module';
-import { HealthModule } from './modules/health/health.module';
-import { EchoModule } from './modules/echo/echo.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CakesModule } from './modules/cakes/cakes.module';
+import { EchoModule } from './modules/echo/echo.module';
+import { HealthModule } from './modules/health/health.module';
 import { OrdersModule } from './modules/orders/orders.module';
 
 @Module({

@@ -3,10 +3,14 @@ import { OrderStatus } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
+import { OrderWithItemsAndUser, WhatsAppService } from './whatsapp.service';
 
 @Injectable()
 export class OrdersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly whatsappService: WhatsAppService,
+  ) {}
 
   async create(userId: string, dto: CreateOrderDto) {
     const cakeIds = dto.items.map((item) => item.cakeId);
@@ -28,12 +32,12 @@ export class OrdersService {
       return {
         cakeId: item.cakeId,
         quantity: item.quantity,
-        price: cake.price, // Storing current price at time of order
+        price: cake.price,
       };
     });
 
-    return this.prisma.$transaction(async (tx) => {
-      const order = await tx.order.create({
+    const order = await this.prisma.$transaction(async (tx) => {
+      return tx.order.create({
         data: {
           userId,
           total,
@@ -43,6 +47,7 @@ export class OrdersService {
           },
         },
         include: {
+          user: true,
           items: {
             include: {
               cake: true,
@@ -50,8 +55,18 @@ export class OrdersService {
           },
         },
       });
-      return order;
     });
+
+    const whatsappMessage = this.whatsappService.generateOrderMessage(
+      order as unknown as OrderWithItemsAndUser,
+    );
+    const whatsappLink = this.whatsappService.getWhatsAppLink(whatsappMessage);
+
+    return {
+      order,
+      whatsappMessage: decodeURIComponent(whatsappMessage),
+      whatsappLink,
+    };
   }
 
   async findAllForUser(userId: string) {

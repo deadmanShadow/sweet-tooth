@@ -1,18 +1,16 @@
-import {
-  BadRequestException,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import type { Cake, Prisma } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
+import { CloudinaryService } from './cloudinary.service';
 import { CreateCakeDto } from './dto/create-cake.dto';
 import { UpdateCakeDto } from './dto/update-cake.dto';
-import { unlink } from 'node:fs/promises';
 
 @Injectable()
 export class CakesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cloudinary: CloudinaryService,
+  ) {}
 
   private toCakeResponse(cake: Cake): Record<string, unknown> {
     return {
@@ -54,7 +52,11 @@ export class CakesService {
     return this.toCakeResponse(cake);
   }
 
-  async updateAdmin(id: string, params: UpdateCakeDto, imagePath?: string | null) {
+  async updateAdmin(
+    id: string,
+    params: UpdateCakeDto,
+    imagePath?: string | null,
+  ) {
     const existing = await this.prisma.cake.findUnique({ where: { id } });
     if (!existing) throw new NotFoundException('Cake not found');
 
@@ -73,11 +75,19 @@ export class CakesService {
     if (!existing) throw new NotFoundException('Cake not found');
 
     if (existing.image) {
-      unlink(`./uploads/${existing.image}`).catch(() => {});
+      // Extract publicId from Cloudinary URL
+      // Example: https://res.cloudinary.com/cloud_name/image/upload/v12345678/sweet-tooth/cakes/filename.jpg
+      const parts = existing.image.split('/');
+      const filename = parts.pop()?.split('.')[0];
+      const folder = parts.slice(-2).join('/'); // 'sweet-tooth/cakes'
+      const publicId = `${folder}/${filename}`;
+
+      await this.cloudinary.deleteImage(publicId).catch((err) => {
+        console.warn(`Failed to delete Cloudinary image ${publicId}:`, err);
+      });
     }
 
     await this.prisma.cake.delete({ where: { id } });
     return { deleted: true };
   }
 }
-

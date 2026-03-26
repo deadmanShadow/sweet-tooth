@@ -21,7 +21,6 @@ model User {
   role      UserRole @default(USER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
   orders Order[]
 
   @@index([email])

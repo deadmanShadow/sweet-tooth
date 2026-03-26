@@ -1,18 +1,18 @@
-import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
-import helmet from 'helmet';
 import { ConfigService } from '@nestjs/config';
+import { NestFactory } from '@nestjs/core';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
-import * as express from 'express';
-import { join } from 'path';
+
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const config = app.get(ConfigService);
 
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('api', { exclude: ['/'] });
   app.enableShutdownHooks();
 
   app.use(helmet());
@@ -42,11 +42,17 @@ async function bootstrap() {
   );
 
   app.useGlobalFilters(new AllExceptionsFilter());
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('Cake API')
+    .setDescription('Cake eCommerce API documentation')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
 
-  // Serve uploaded cake images
-  app.use('/uploads', express.static(join(process.cwd(), 'uploads')));
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('docs', app, document);
 
-  const port = config.get<number>('port', 3000);
+  const port = config.get<number>('port', 5000);
   await app.listen(port);
 }
-bootstrap();
+void bootstrap();

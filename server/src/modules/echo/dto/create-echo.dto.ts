@@ -5,4 +5,3 @@ export class CreateEchoDto {
   @Length(1, 200)
   message!: string;
 }
-

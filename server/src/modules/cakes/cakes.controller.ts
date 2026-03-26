@@ -4,27 +4,30 @@ import {
   Delete,
   Get,
   Param,
-  Patch,
   Post,
   Put,
   UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config'; // <-- ADD THIS LINE
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UserRole } from '@prisma/client';
-import type { Multer } from 'multer';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { CakesService } from './cakes.service';
+import { CloudinaryService } from './cloudinary.service';
 import { CreateCakeDto } from './dto/create-cake.dto';
 import { UpdateCakeDto } from './dto/update-cake.dto';
-import { CakesService } from './cakes.service';
-import { cakeMulterStorage, imagePathFromFilename } from './multer-storage';
+import { cakeCloudinaryStorage } from './multer-storage';
 
 @Controller('cakes')
 export class CakesController {
-  constructor(private readonly cakes: CakesService) {}
+  constructor(
+    private readonly cakes: CakesService,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
   @Get()
   listPublic() {
@@ -41,15 +44,16 @@ export class CakesController {
   @Post()
   @UseInterceptors(
     FileInterceptor('image', {
-      storage: cakeMulterStorage(),
-      limits: { fileSize: 5_000_000 },
+      storage: cakeCloudinaryStorage(
+        new CloudinaryService(new ConfigService() as any) as any,
+      ),
     }),
   )
   createAdmin(
     @Body() dto: CreateCakeDto,
-    @UploadedFile() image?: Multer.File,
+    @UploadedFile() image?: { path: string },
   ) {
-    const imagePath = image ? imagePathFromFilename(image.filename) : undefined;
+    const imagePath = image?.path;
     return this.cakes.createAdmin(dto, imagePath);
   }
 
@@ -58,16 +62,17 @@ export class CakesController {
   @Put(':id')
   @UseInterceptors(
     FileInterceptor('image', {
-      storage: cakeMulterStorage(),
-      limits: { fileSize: 5_000_000 },
+      storage: cakeCloudinaryStorage(
+        new CloudinaryService(new ConfigService() as any) as any,
+      ),
     }),
   )
   updateAdmin(
     @Param('id') id: string,
     @Body() dto: UpdateCakeDto,
-    @UploadedFile() image?: Multer.File,
+    @UploadedFile() image?: { path: string },
   ) {
-    const imagePath = image ? imagePathFromFilename(image.filename) : undefined;
+    const imagePath = image?.path;
     return this.cakes.updateAdmin(id, dto, imagePath);
   }
 
@@ -78,4 +83,3 @@ export class CakesController {
     return this.cakes.deleteAdmin(id);
   }
 }
-

@@ -1,5 +1,5 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
@@ -20,9 +20,10 @@ describe('AppController (e2e)', () => {
     return request(app.getHttpServer())
       .get('/')
       .expect(200)
-      .expect((res) => {
-        expect(res.body.status).toBe('running');
-        expect(typeof res.body.timestamp).toBe('string');
+      .expect((res: request.Response) => {
+        const body = res.body as { status: string; timestamp: string };
+        expect(body.status).toBe('running');
+        expect(typeof body.timestamp).toBe('string');
       });
   });
 });
