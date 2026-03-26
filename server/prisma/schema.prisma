@@ -33,13 +33,19 @@ enum UserRole {
 }
 
 model Cake {
-  id          String   @id @default(cuid())
-  name        String
-  price       Float
-  image       String?
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String   @id @default(cuid())
+  name            String
+  type            String?
+  flavor          String?
+  sizeOptions     String[] @default([])
+  specialFeatures String[] @default([])
+  pounds          Float?
+  availability    Boolean  @default(true)
+  price           Float
+  image           String?
+  description     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   orderItems OrderItem[]
 }

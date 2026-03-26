@@ -10,23 +10,23 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config'; // <-- ADD THIS LINE
-import { FileInterceptor } from '@nestjs/platform-express';
+import { ConfigService } from '@nestjs/config';
 import { UserRole } from '@prisma/client';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { CakeImageInterceptor } from './cake-image.interceptor';
 import { CakesService } from './cakes.service';
 import { CloudinaryService } from './cloudinary.service';
 import { CreateCakeDto } from './dto/create-cake.dto';
 import { UpdateCakeDto } from './dto/update-cake.dto';
-import { cakeCloudinaryStorage } from './multer-storage';
 
 @Controller('cakes')
 export class CakesController {
   constructor(
     private readonly cakes: CakesService,
     private readonly cloudinaryService: CloudinaryService,
+    private readonly configService: ConfigService,
   ) {}
 
   @Get()
@@ -42,13 +42,7 @@ export class CakesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Post()
-  @UseInterceptors(
-    FileInterceptor('image', {
-      storage: cakeCloudinaryStorage(
-        new CloudinaryService(new ConfigService() as any) as any,
-      ),
-    }),
-  )
+  @UseInterceptors(CakeImageInterceptor)
   createAdmin(
     @Body() dto: CreateCakeDto,
     @UploadedFile() image?: { path: string },
@@ -60,13 +54,7 @@ export class CakesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Put(':id')
-  @UseInterceptors(
-    FileInterceptor('image', {
-      storage: cakeCloudinaryStorage(
-        new CloudinaryService(new ConfigService() as any) as any,
-      ),
-    }),
-  )
+  @UseInterceptors(CakeImageInterceptor)
   updateAdmin(
     @Param('id') id: string,
     @Body() dto: UpdateCakeDto,

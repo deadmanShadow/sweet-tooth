@@ -16,6 +16,12 @@ export class CakesService {
     return {
       id: cake.id,
       name: cake.name,
+      type: cake.type,
+      flavor: cake.flavor,
+      sizeOptions: cake.sizeOptions,
+      specialFeatures: cake.specialFeatures,
+      pounds: cake.pounds,
+      availability: cake.availability,
       description: cake.description,
       price: cake.price,
       image: cake.image,
@@ -43,6 +49,12 @@ export class CakesService {
   async createAdmin(params: CreateCakeDto, imagePath?: string) {
     const data: Prisma.CakeCreateInput = {
       name: params.name,
+      type: params.type,
+      flavor: params.flavor,
+      sizeOptions: params.sizeOptions,
+      specialFeatures: params.specialFeatures,
+      pounds: params.pounds,
+      availability: params.availability,
       description: params.description,
       price: params.price,
       image: imagePath ?? null,
@@ -62,6 +74,14 @@ export class CakesService {
 
     const data: Prisma.CakeUpdateInput = {};
     if (params.name !== undefined) data.name = params.name;
+    if (params.type !== undefined) data.type = params.type;
+    if (params.flavor !== undefined) data.flavor = params.flavor;
+    if (params.sizeOptions !== undefined) data.sizeOptions = params.sizeOptions;
+    if (params.specialFeatures !== undefined)
+      data.specialFeatures = params.specialFeatures;
+    if (params.pounds !== undefined) data.pounds = params.pounds;
+    if (params.availability !== undefined)
+      data.availability = params.availability;
     if (params.description !== undefined) data.description = params.description;
     if (params.price !== undefined) data.price = params.price;
     if (imagePath !== undefined) data.image = imagePath;
