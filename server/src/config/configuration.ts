@@ -9,4 +9,6 @@ export default () => ({
     accessSecret: process.env.JWT_ACCESS_SECRET,
     accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN ?? '15m',
   },
+
+  initialAdminEmail: process.env.INITIAL_ADMIN_EMAIL,
 });

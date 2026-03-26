@@ -1,7 +1,7 @@
 import { diskStorage } from 'multer';
 import { existsSync, mkdirSync } from 'node:fs';
 import { join, extname } from 'node:path';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'node:crypto';
 
 export const CAKE_UPLOAD_DIR = 'uploads/cakes';
 
@@ -17,7 +17,7 @@ export function cakeMulterStorage() {
     destination: (_req, _file, cb) => cb(null, CAKE_UPLOAD_DIR),
     filename: (_req, file, cb) => {
       const ext = extname(file.originalname) || '';
-      const filename = `${uuidv4()}${ext.toLowerCase()}`;
+      const filename = `${randomUUID()}${ext.toLowerCase()}`;
       cb(null, filename);
     },
   });

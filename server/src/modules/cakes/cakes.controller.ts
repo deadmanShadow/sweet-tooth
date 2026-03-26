@@ -11,9 +11,9 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import type { Express } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UserRole } from '@prisma/client';
+import type { Multer } from 'multer';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -47,7 +47,7 @@ export class CakesController {
   )
   createAdmin(
     @Body() dto: CreateCakeDto,
-    @UploadedFile() image?: Express.Multer.File,
+    @UploadedFile() image?: Multer.File,
   ) {
     const imagePath = image ? imagePathFromFilename(image.filename) : undefined;
     return this.cakes.createAdmin(dto, imagePath);
@@ -65,7 +65,7 @@ export class CakesController {
   updateAdmin(
     @Param('id') id: string,
     @Body() dto: UpdateCakeDto,
-    @UploadedFile() image?: Express.Multer.File,
+    @UploadedFile() image?: Multer.File,
   ) {
     const imagePath = image ? imagePathFromFilename(image.filename) : undefined;
     return this.cakes.updateAdmin(id, dto, imagePath);

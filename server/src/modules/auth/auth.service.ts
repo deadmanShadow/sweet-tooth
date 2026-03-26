@@ -5,6 +5,7 @@ import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
 import { JwtPayload } from './types/jwt-payload';
 import type { StringValue } from 'ms';
+import { UserRole } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -26,10 +27,18 @@ export class AuthService {
     if (existing) throw new ConflictException('Email is already registered');
 
     const passwordHash = await this.hashPassword(params.password);
+
+    const initialAdminEmail = this.config.get<string>('initialAdminEmail');
+    const role =
+      initialAdminEmail && initialAdminEmail.toLowerCase() === email
+        ? UserRole.ADMIN
+        : undefined;
+
     const user = await this.users.create({
       email,
       passwordHash,
       fullName: params.fullName.trim(),
+      role,
     });
 
     const tokens = await this.issueTokens(user.id);
