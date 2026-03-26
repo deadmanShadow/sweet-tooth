@@ -21,23 +21,23 @@ export class AuthService {
     return bcrypt.hash(password, rounds);
   }
 
-  async register(params: { email: string; password: string; fullName: string }) {
+  async register(params: { email: string; password: string; name: string }) {
     const email = params.email.trim().toLowerCase();
     const existing = await this.users.findByEmail(email);
     if (existing) throw new ConflictException('Email is already registered');
 
-    const passwordHash = await this.hashPassword(params.password);
+    const password = await this.hashPassword(params.password);
 
     const initialAdminEmail = this.config.get<string>('initialAdminEmail');
     const role =
       initialAdminEmail && initialAdminEmail.toLowerCase() === email
         ? UserRole.ADMIN
-        : undefined;
+        : UserRole.USER;
 
     const user = await this.users.create({
       email,
-      passwordHash,
-      fullName: params.fullName.trim(),
+      password,
+      name: params.name.trim(),
       role,
     });
 
@@ -51,9 +51,9 @@ export class AuthService {
   async login(params: { email: string; password: string }) {
     const email = params.email.trim().toLowerCase();
     const user = await this.users.findByEmail(email);
-    if (!user || !user.isActive) throw new UnauthorizedException('Invalid credentials');
+    if (!user) throw new UnauthorizedException('Invalid credentials');
 
-    const ok = await bcrypt.compare(params.password, user.passwordHash);
+    const ok = await bcrypt.compare(params.password, user.password);
     if (!ok) throw new UnauthorizedException('Invalid credentials');
 
     const tokens = await this.issueTokens(user.id);
@@ -62,18 +62,18 @@ export class AuthService {
 
   async issueTokens(userId: string) {
     const user = await this.users.findById(userId);
-    if (!user || !user.isActive) throw new UnauthorizedException('Invalid user');
+    if (!user) throw new UnauthorizedException('Invalid user');
 
     const payload: JwtPayload = { sub: user.id, email: user.email, role: user.role };
-    const expiresIn = this.config.get<string>('jwt.accessExpiresIn', '15m') as StringValue;
+    const expiresIn = this.config.get<string>('jwt.accessExpiresIn', '1d') as StringValue;
 
     const accessToken = await this.jwt.signAsync(payload, { expiresIn });
     return { accessToken, tokenType: 'Bearer' as const, expiresIn };
   }
 
-  sanitizeUser(user: { passwordHash: string } & Record<string, unknown>) {
+  sanitizeUser(user: { password?: string } & Record<string, any>) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { passwordHash, ...rest } = user;
+    const { password, ...rest } = user;
     return rest;
   }
 }

@@ -10,28 +10,35 @@ export class UsersService {
     return this.prisma.user.findUnique({ where: { email } });
   }
 
-  findById(id: string) {
-    return this.prisma.user.findUnique({ where: { id } });
+  async findById(id: string) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (user) {
+      const { password, ...rest } = user;
+      return rest;
+    }
+    return null;
   }
 
   async create(params: {
     email: string;
-    passwordHash: string;
-    fullName: string;
+    password: string;
+    name: string;
     role?: UserRole;
   }): Promise<User> {
     return this.prisma.user.create({
       data: {
         email: params.email,
-        passwordHash: params.passwordHash,
-        fullName: params.fullName,
-        role: params.role ?? UserRole.STAFF,
+        password: params.password,
+        name: params.name,
+        role: params.role ?? UserRole.USER,
       },
     });
   }
 
-  async update(where: Prisma.UserWhereUniqueInput, data: Prisma.UserUpdateInput) {
+  async update(
+    where: Prisma.UserWhereUniqueInput,
+    data: Prisma.UserUpdateInput,
+  ) {
     return this.prisma.user.update({ where, data });
   }
 }
-

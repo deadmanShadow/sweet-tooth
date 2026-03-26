@@ -15,10 +15,10 @@ export const envValidationSchema = Joi.object({
     .default('info'),
 
   DATABASE_URL: Joi.string().uri().required(),
-  DIRECT_URL: Joi.string().uri().required(),
+  DIRECT_URL: Joi.string().uri().optional(),
 
-  JWT_ACCESS_SECRET: Joi.string().min(32).required(),
-  JWT_ACCESS_EXPIRES_IN: Joi.string().default('15m'),
+  JWT_SECRET: Joi.string().min(8).required(),
+  JWT_EXPIRES_IN: Joi.string().default('1d'),
 
   // Allows controlled bootstrap of the first ADMIN user.
   // If unset, registrations create STAFF users only.

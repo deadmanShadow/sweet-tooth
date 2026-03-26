@@ -6,8 +6,8 @@ export default () => ({
   databaseUrl: process.env.DATABASE_URL,
   directUrl: process.env.DIRECT_URL,
   jwt: {
-    accessSecret: process.env.JWT_ACCESS_SECRET,
-    accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN ?? '15m',
+    accessSecret: process.env.JWT_SECRET,
+    accessExpiresIn: process.env.JWT_EXPIRES_IN ?? '1d',
   },
 
   initialAdminEmail: process.env.INITIAL_ADMIN_EMAIL,

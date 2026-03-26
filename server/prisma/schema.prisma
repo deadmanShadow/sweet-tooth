@@ -13,25 +13,31 @@ datasource db {
 
 }
 
-model Customer {
-  id          String   @id @default(cuid())
-  name        String
-  phoneE164   String   @unique
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      UserRole @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   orders Order[]
 
-  @@index([phoneE164])
+  @@index([email])
 }
 
-model Product {
+enum UserRole {
+  ADMIN
+  USER
+}
+
+model Cake {
   id          String   @id @default(cuid())
   name        String
+  price       Float
+  image       String?
   description String?
-  priceCents  Int
-  imagePath   String?
-  isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -39,63 +45,40 @@ model Product {
 }
 
 model Order {
-  id               String     @id @default(cuid())
-  customerId       String
-  status           OrderStatus @default(PENDING)
-  notes            String?
-  totalCents       Int         @default(0)
-  whatsappThreadId String?
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @updatedAt
+  id        String      @id @default(cuid())
+  userId    String
+  total     Float
+  status    OrderStatus @default(PENDING)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 
-  customer  Customer   @relation(fields: [customerId], references: [id], onDelete: Restrict)
-  items     OrderItem[]
+  user  User        @relation(fields: [userId], references: [id])
+  items OrderItem[]
 
-  @@index([customerId])
+  @@index([userId])
   @@index([status])
-  @@index([createdAt])
 }
 
 model OrderItem {
-  id         String   @id @default(cuid())
-  orderId    String
-  productId  String
-  quantity   Int
-  unitCents  Int
-  lineCents  Int
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id        String   @id @default(cuid())
+  orderId   String
+  cakeId    String
+  quantity  Int
+  price     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  order Order @relation(fields: [orderId], references: [id])
+  cake  Cake  @relation(fields: [cakeId], references: [id])
 
   @@index([orderId])
-  @@index([productId])
+  @@index([cakeId])
 }
 
 enum OrderStatus {
   PENDING
   CONFIRMED
-  IN_PRODUCTION
-  READY
+  SHIPPED
   DELIVERED
   CANCELLED
-}
-
-model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  fullName     String
-  role         UserRole @default(STAFF)
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  @@index([email])
-}
-
-enum UserRole {
-  ADMIN
-  STAFF
 }

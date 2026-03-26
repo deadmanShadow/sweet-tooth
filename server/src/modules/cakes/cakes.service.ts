@@ -4,99 +4,79 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import type { Product, Prisma } from '@prisma/client';
+import type { Cake, Prisma } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 import { CreateCakeDto } from './dto/create-cake.dto';
 import { UpdateCakeDto } from './dto/update-cake.dto';
 import { unlink } from 'node:fs/promises';
 
-type CakeImage = {
-  imagePath?: string | null;
-  imageUrl?: string | null;
-};
-
 @Injectable()
 export class CakesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private toPriceCents(price: number) {
-    if (!Number.isFinite(price) || price < 0) {
-      throw new BadRequestException('Invalid price');
-    }
-    return Math.round(price * 100);
-  }
-
-  private toCakeResponse(product: Product & CakeImage): Record<string, unknown> {
-    // Keep API response stable and hide internal naming.
+  private toCakeResponse(cake: Cake): Record<string, unknown> {
     return {
-      id: product.id,
-      name: product.name,
-      description: product.description,
-      priceCents: product.priceCents,
-      price: product.priceCents / 100,
-      isAvailable: product.isActive,
-      imageUrl: product.imageUrl ?? (product.imagePath ? `/uploads/${product.imagePath}` : null),
-      createdAt: product.createdAt,
-      updatedAt: product.updatedAt,
+      id: cake.id,
+      name: cake.name,
+      description: cake.description,
+      price: cake.price,
+      image: cake.image,
+      createdAt: cake.createdAt,
+      updatedAt: cake.updatedAt,
     };
   }
 
   async listPublic() {
-    const products = await this.prisma.product.findMany({
-      where: { isActive: true },
+    const cakes = await this.prisma.cake.findMany({
       orderBy: { createdAt: 'desc' },
     });
 
-    return products.map((p) => this.toCakeResponse(p as Product));
+    return cakes.map((c) => this.toCakeResponse(c));
   }
 
   async getPublicById(id: string) {
-    const product = await this.prisma.product.findFirst({
-      where: { id, isActive: true },
+    const cake = await this.prisma.cake.findUnique({
+      where: { id },
     });
-    if (!product) throw new NotFoundException('Cake not found');
-    return this.toCakeResponse(product as Product);
+    if (!cake) throw new NotFoundException('Cake not found');
+    return this.toCakeResponse(cake);
   }
 
   async createAdmin(params: CreateCakeDto, imagePath?: string) {
-    const isActive = params.isAvailable ?? true;
-    const data: Prisma.ProductCreateInput = {
+    const data: Prisma.CakeCreateInput = {
       name: params.name,
       description: params.description,
-      priceCents: this.toPriceCents(params.price),
-      isActive,
-      imagePath: imagePath ?? null,
+      price: params.price,
+      image: imagePath ?? null,
     };
 
-    const product = await this.prisma.product.create({ data });
-    return this.toCakeResponse(product as Product);
+    const cake = await this.prisma.cake.create({ data });
+    return this.toCakeResponse(cake);
   }
 
   async updateAdmin(id: string, params: UpdateCakeDto, imagePath?: string | null) {
-    const existing = await this.prisma.product.findUnique({ where: { id } });
+    const existing = await this.prisma.cake.findUnique({ where: { id } });
     if (!existing) throw new NotFoundException('Cake not found');
 
-    const data: Prisma.ProductUpdateInput = {};
+    const data: Prisma.CakeUpdateInput = {};
     if (params.name !== undefined) data.name = params.name;
     if (params.description !== undefined) data.description = params.description;
-    if (params.price !== undefined) data.priceCents = this.toPriceCents(params.price);
-    if (params.isAvailable !== undefined) data.isActive = params.isAvailable;
-    if (imagePath !== undefined) data.imagePath = imagePath;
+    if (params.price !== undefined) data.price = params.price;
+    if (imagePath !== undefined) data.image = imagePath;
 
-    const updated = await this.prisma.product.update({ where: { id }, data });
-    return this.toCakeResponse(updated as Product);
+    const updated = await this.prisma.cake.update({ where: { id }, data });
+    return this.toCakeResponse(updated);
   }
 
   async deleteAdmin(id: string) {
-    const existing = await this.prisma.product.findUnique({ where: { id } });
+    const existing = await this.prisma.cake.findUnique({ where: { id } });
     if (!existing) throw new NotFoundException('Cake not found');
 
-    // Best-effort delete; don't block DB delete if filesystem fails.
-    if (existing.imagePath) {
-      unlink(`./uploads/${existing.imagePath}`).catch(() => {});
+    if (existing.image) {
+      unlink(`./uploads/${existing.image}`).catch(() => {});
     }
 
-    await this.prisma.product.delete({ where: { id } });
+    await this.prisma.cake.delete({ where: { id } });
     return { deleted: true };
   }
 }

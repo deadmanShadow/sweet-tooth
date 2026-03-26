@@ -15,9 +15,5 @@ export class UpdateCakeDto {
   @IsOptional()
   @IsString()
   description?: string;
-
-  @IsOptional()
-  @IsBoolean()
-  isAvailable?: boolean;
 }
 

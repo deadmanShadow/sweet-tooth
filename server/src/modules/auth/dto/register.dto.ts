@@ -10,6 +10,6 @@ export class RegisterDto {
 
   @IsString()
   @Length(2, 100)
-  fullName!: string;
+  name!: string;
 }
 
