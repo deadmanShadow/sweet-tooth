@@ -18,17 +18,30 @@ async function bootstrap() {
   app.use(helmet());
 
   const corsOriginRaw = config.get<string>('corsOrigin', '*');
-  const isWildcard = corsOriginRaw === '*';
-  const corsOrigins = isWildcard
-    ? undefined
-    : corsOriginRaw
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean);
+  const frontendUrl = config.get<string>('frontendUrl');
 
+  let corsOrigins: string | string[] | boolean;
+
+  if (corsOriginRaw === '*') {
+    corsOrigins = frontendUrl ? [frontendUrl.replace(/\/$/, '')] : true;
+  } else {
+    corsOrigins = corsOriginRaw
+      .split(',')
+      .map((s) => s.trim().replace(/\/$/, ''))
+      .filter(Boolean);
+
+    if (frontendUrl) {
+      const cleanFrontendUrl = frontendUrl.replace(/\/$/, '');
+      if (!corsOrigins.includes(cleanFrontendUrl)) {
+        corsOrigins.push(cleanFrontendUrl);
+      }
+    }
+  }
   app.enableCors({
-    origin: isWildcard ? true : corsOrigins,
-    credentials: !isWildcard,
+    origin: process.env.NEXT_FRONTEND_URL,
+    credentials: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type, Accept, Authorization',
   });
 
   app.useGlobalPipes(

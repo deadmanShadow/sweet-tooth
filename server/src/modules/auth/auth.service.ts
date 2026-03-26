@@ -25,7 +25,12 @@ export class AuthService {
     return bcrypt.hash(password, rounds);
   }
 
-  async register(params: { email: string; password: string; name: string }) {
+  async register(params: {
+    email: string;
+    password: string;
+    name: string;
+    phone?: string;
+  }) {
     const email = params.email.trim().toLowerCase();
     const existing = await this.users.findByEmail(email);
     if (existing) throw new ConflictException('Email is already registered');
@@ -42,6 +47,7 @@ export class AuthService {
       email,
       password,
       name: params.name.trim(),
+      phone: params.phone,
       role,
     });
 
