@@ -4,8 +4,8 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
-  Put,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -53,7 +53,7 @@ export class CakesController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
-  @Put(':id')
+  @Patch(':id')
   @UseInterceptors(CakeImageInterceptor)
   updateAdmin(
     @Param('id') id: string,

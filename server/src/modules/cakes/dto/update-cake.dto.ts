@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import {
+  Allow,
   IsArray,
   IsBoolean,
   IsNumber,
@@ -50,4 +51,8 @@ export class UpdateCakeDto {
   @IsOptional()
   @IsString()
   description?: string;
+
+  @IsOptional()
+  @Allow()
+  image?: any;
 }
