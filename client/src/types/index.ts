@@ -26,6 +26,7 @@ export interface Order {
   id: string;
   orderId?: string; // Add this to match the backend response for checkout
   userId: string;
+  user?: User;
   total: number;
   status: "PENDING" | "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED";
   createdAt: string;
