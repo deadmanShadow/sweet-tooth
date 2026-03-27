@@ -231,4 +231,14 @@ export class OrdersService {
       data: { status: dto.status },
     });
   }
+
+  async resetOrders() {
+    return this.prisma.$transaction(async (tx) => {
+      // Delete all order items first to avoid foreign key constraints if not cascaded
+      await tx.orderItem.deleteMany({});
+      // Then delete all orders
+      await tx.order.deleteMany({});
+      return { message: 'All orders and revenue have been reset successfully' };
+    });
+  }
 }

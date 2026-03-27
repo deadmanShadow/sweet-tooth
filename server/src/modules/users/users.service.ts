@@ -51,4 +51,26 @@ export class UsersService {
     const { password, ...rest } = user;
     return rest;
   }
+
+  async findAll() {
+    const users = await this.prisma.user.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: {
+        _count: {
+          select: { orders: true },
+        },
+      },
+    });
+    return users.map((user) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password, ...rest } = user;
+      return rest;
+    });
+  }
+
+  async delete(id: string) {
+    // Delete associated orders first or let prisma handle it if cascaded
+    // For now, let's just delete the user.
+    return this.prisma.user.delete({ where: { id } });
+  }
 }
