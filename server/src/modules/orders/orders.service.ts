@@ -1,9 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { OrderStatus } from '@prisma/client';
+import { OrderStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { QueryOrderDto } from './dto/query-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
-import { OrderWithItemsAndUser, WhatsAppService } from './whatsapp.service';
+import { WhatsAppService } from './whatsapp.service';
 
 @Injectable()
 export class OrdersService {
@@ -13,21 +14,26 @@ export class OrdersService {
   ) {}
 
   async getStats() {
-    const [totalOrders, totalRevenue, totalUsers, totalCakes] =
+    const [totalOrders, revenueData, totalUsers, totalCakes] =
       await Promise.all([
         this.prisma.order.count(),
         this.prisma.order.aggregate({
+          where: {
+            status: { in: [OrderStatus.CONFIRMED, OrderStatus.DELIVERED] },
+          },
           _sum: { total: true },
         }),
         this.prisma.user.count({ where: { role: 'USER' } }),
         this.prisma.cake.count(),
       ]);
 
-    const ordersByMonth = await this.prisma.$queryRaw<
-      { month: string; count: number }[]
+    // Monthly grouped revenue (only for confirmed/delivered)
+    const revenueByMonth = await this.prisma.$queryRaw<
+      { month: string; revenue: number }[]
     >`
-      SELECT TO_CHAR("createdAt", 'Mon') as month, COUNT(*)::int as count
+      SELECT TO_CHAR("createdAt", 'Mon') as month, SUM(total)::float as revenue
       FROM "Order"
+      WHERE status IN ('CONFIRMED', 'DELIVERED')
       GROUP BY month
       ORDER BY MIN("createdAt")
     `;
@@ -42,11 +48,11 @@ export class OrdersService {
     return {
       overview: {
         totalOrders,
-        totalRevenue: totalRevenue._sum.total || 0,
+        totalRevenue: revenueData._sum.total || 0,
         totalUsers,
         totalCakes,
       },
-      ordersByMonth,
+      revenueByMonth,
       statusDistribution: statusDistribution.map((item) => ({
         status: item.status,
         count: item._count.status,
@@ -55,12 +61,16 @@ export class OrdersService {
   }
 
   async create(userId: string, dto: CreateOrderDto) {
+    if (!dto.items || dto.items.length === 0) {
+      throw new NotFoundException('Order items cannot be empty');
+    }
+
     const cakeIds = dto.items.map((item) => item.cakeId);
     const cakes = await this.prisma.cake.findMany({
       where: { id: { in: cakeIds } },
     });
 
-    if (cakes.length !== cakeIds.length) {
+    if (cakes.length !== new Set(cakeIds).size) {
       throw new NotFoundException('Some cakes were not found');
     }
 
@@ -69,15 +79,16 @@ export class OrdersService {
 
     const orderItemsData = dto.items.map((item) => {
       const cake = cakeMap.get(item.cakeId)!;
-      const price = cake.price * item.quantity;
-      total += price;
+      const itemTotal = cake.price * item.quantity;
+      total += itemTotal;
       return {
         cakeId: item.cakeId,
         quantity: item.quantity,
-        price: cake.price,
+        price: cake.price, // unit price at time of order
       };
     });
 
+    // Use Prisma transaction to create order and items
     const order = await this.prisma.$transaction(async (tx) => {
       return tx.order.create({
         data: {
@@ -89,7 +100,14 @@ export class OrdersService {
           },
         },
         include: {
-          user: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+            },
+          },
           items: {
             include: {
               cake: true,
@@ -99,15 +117,14 @@ export class OrdersService {
       });
     });
 
-    const whatsappMessage = this.whatsappService.generateOrderMessage(
-      order as unknown as OrderWithItemsAndUser,
-    );
-    const whatsappLink = this.whatsappService.getWhatsAppLink(whatsappMessage);
+    // Optional: Generate WhatsApp message/link for the order
+    const whatsappMessage = this.whatsappService.generateOrderMessage(order);
+    const whatsappUrl = this.whatsappService.getWhatsAppLink(whatsappMessage);
 
     return {
-      order,
-      whatsappMessage: decodeURIComponent(whatsappMessage),
-      whatsappLink,
+      ...order,
+      whatsappMessage,
+      whatsappUrl,
     };
   }
 
@@ -125,24 +142,60 @@ export class OrdersService {
     });
   }
 
-  async findAllAdmin() {
-    return this.prisma.order.findMany({
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
+  async findAllAdmin(query: QueryOrderDto) {
+    const { status, startDate, endDate, page = 1, limit = 10 } = query;
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.OrderWhereInput = {};
+
+    if (status) {
+      where.status = status;
+    }
+
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) {
+        where.createdAt.gte = new Date(startDate);
+      }
+      if (endDate) {
+        where.createdAt.lte = new Date(endDate);
+      }
+    }
+
+    const [total, items] = await Promise.all([
+      this.prisma.order.count({ where }),
+      this.prisma.order.findMany({
+        where,
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+            },
+          },
+          items: {
+            include: {
+              cake: true,
+            },
           },
         },
-        items: {
-          include: {
-            cake: true,
-          },
-        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+    ]);
+
+    return {
+      items,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
       },
-      orderBy: { createdAt: 'desc' },
-    });
+    };
   }
 
   async findOne(id: string) {

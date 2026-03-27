@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
@@ -18,6 +19,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
+import { QueryOrderDto } from './dto/query-order.dto';
 import { OrdersService } from './orders.service';
 
 @Controller('orders')
@@ -27,11 +29,15 @@ export class OrdersController {
 
   @Post()
   @Roles(UserRole.USER, UserRole.ADMIN)
-  create(
+  async create(
     @CurrentUserDecorator() user: CurrentUser,
     @Body() dto: CreateOrderDto,
   ) {
-    return this.orders.create(user.id, dto);
+    const order = await this.orders.create(user.id, dto);
+    return {
+      orderId: order.id,
+      whatsappUrl: order.whatsappUrl,
+    };
   }
 
   @Get('my')
@@ -42,8 +48,8 @@ export class OrdersController {
 
   @Get('admin')
   @Roles(UserRole.ADMIN)
-  findAllAdmin() {
-    return this.orders.findAllAdmin();
+  findAllAdmin(@Query() query: QueryOrderDto) {
+    return this.orders.findAllAdmin(query);
   }
 
   @Get('stats')
