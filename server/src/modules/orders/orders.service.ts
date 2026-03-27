@@ -12,6 +12,48 @@ export class OrdersService {
     private readonly whatsappService: WhatsAppService,
   ) {}
 
+  async getStats() {
+    const [totalOrders, totalRevenue, totalUsers, totalCakes] =
+      await Promise.all([
+        this.prisma.order.count(),
+        this.prisma.order.aggregate({
+          _sum: { total: true },
+        }),
+        this.prisma.user.count({ where: { role: 'USER' } }),
+        this.prisma.cake.count(),
+      ]);
+
+    const ordersByMonth = await this.prisma.$queryRaw<
+      { month: string; count: number }[]
+    >`
+      SELECT TO_CHAR("createdAt", 'Mon') as month, COUNT(*)::int as count
+      FROM "Order"
+      GROUP BY month
+      ORDER BY MIN("createdAt")
+    `;
+
+    const statusDistribution = await this.prisma.order.groupBy({
+      by: ['status'],
+      _count: {
+        status: true,
+      },
+    });
+
+    return {
+      overview: {
+        totalOrders,
+        totalRevenue: totalRevenue._sum.total || 0,
+        totalUsers,
+        totalCakes,
+      },
+      ordersByMonth,
+      statusDistribution: statusDistribution.map((item) => ({
+        status: item.status,
+        count: item._count.status,
+      })),
+    };
+  }
+
   async create(userId: string, dto: CreateOrderDto) {
     const cakeIds = dto.items.map((item) => item.cakeId);
     const cakes = await this.prisma.cake.findMany({
@@ -107,6 +149,14 @@ export class OrdersService {
     const order = await this.prisma.order.findUnique({
       where: { id },
       include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+          },
+        },
         items: {
           include: {
             cake: true,
@@ -114,13 +164,14 @@ export class OrdersService {
         },
       },
     });
+
     if (!order) throw new NotFoundException('Order not found');
     return order;
   }
 
   async updateStatus(id: string, dto: UpdateOrderStatusDto) {
-    const order = await this.prisma.order.findUnique({ where: { id } });
-    if (!order) throw new NotFoundException('Order not found');
+    const existing = await this.prisma.order.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException('Order not found');
 
     return this.prisma.order.update({
       where: { id },

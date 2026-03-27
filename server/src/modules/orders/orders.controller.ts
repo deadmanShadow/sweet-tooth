@@ -46,6 +46,12 @@ export class OrdersController {
     return this.orders.findAllAdmin();
   }
 
+  @Get('stats')
+  @Roles(UserRole.ADMIN)
+  getStats() {
+    return this.orders.getStats();
+  }
+
   @Patch(':id/status')
   @Roles(UserRole.ADMIN)
   updateStatus(@Param('id') id: string, @Body() dto: UpdateOrderStatusDto) {
