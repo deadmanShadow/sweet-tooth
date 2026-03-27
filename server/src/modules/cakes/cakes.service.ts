@@ -107,6 +107,9 @@ export class CakesService {
       });
     }
 
+    // Manually delete associated order items to satisfy foreign key constraint
+    await this.prisma.orderItem.deleteMany({ where: { cakeId: id } });
+
     await this.prisma.cake.delete({ where: { id } });
     return { deleted: true };
   }

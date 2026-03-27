@@ -69,8 +69,14 @@ export class UsersService {
   }
 
   async delete(id: string) {
-    // Delete associated orders first or let prisma handle it if cascaded
-    // For now, let's just delete the user.
+    // Manually delete associated orders and their items to satisfy foreign key constraint
+    await this.prisma.orderItem.deleteMany({
+      where: { order: { userId: id } },
+    });
+    await this.prisma.order.deleteMany({
+      where: { userId: id },
+    });
+
     return this.prisma.user.delete({ where: { id } });
   }
 }
