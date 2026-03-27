@@ -63,9 +63,10 @@ export default function CheckoutPage() {
         toast.success("Order placed! Redirecting to WhatsApp...");
 
         // Redirect to WhatsApp URL as requested
-        if (response.whatsappUrl) {
+        const whatsappUrl = response.whatsappUrl;
+        if (whatsappUrl) {
           setTimeout(() => {
-            window.location.href = response.whatsappUrl;
+            window.location.href = whatsappUrl;
           }, 1500); // Small delay to let user see success message
         }
       }

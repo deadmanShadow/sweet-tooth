@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { cakeService } from "@/services/api.service";
+import { Cake } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Upload } from "lucide-react";
 import Image from "next/image";
@@ -26,21 +27,8 @@ const cakeSchema = z.object({
   pounds: z.coerce.number().min(0, { message: "Pounds must be positive" }),
   availability: z.boolean().default(true),
   description: z.string().optional(),
-  sizeOptions: z.string().transform((val) =>
-    val
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean),
-  ),
-  specialFeatures: z
-    .string()
-    .transform((val) =>
-      val
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean),
-    )
-    .optional(),
+  sizeOptions: z.string(),
+  specialFeatures: z.string().optional(),
 });
 
 interface CakeFormProps {
@@ -61,7 +49,7 @@ export function CakeForm({ initialData }: CakeFormProps) {
     setValue,
     watch,
     formState: { errors },
-  } = useForm<z.infer<typeof cakeSchema>>({
+  } = useForm<z.input<typeof cakeSchema>>({
     resolver: zodResolver(cakeSchema),
     defaultValues: {
       name: initialData?.name || "",
@@ -90,18 +78,35 @@ export function CakeForm({ initialData }: CakeFormProps) {
     }
   };
 
-  const onSubmit = async (data: z.infer<typeof cakeSchema>) => {
+  const onSubmit = async (values: any) => {
     setIsLoading(true);
     try {
       const formData = new FormData();
-      Object.keys(data).forEach((key) => {
-        const value = (data as Record<string, unknown>)[key];
-        if (Array.isArray(value)) {
-          value.forEach((item: string) => formData.append(`${key}[]`, item));
-        } else {
-          formData.append(key, String(value));
-        }
-      });
+
+      // Transform strings to arrays
+      const sizeOptions = (values.sizeOptions as string)
+        .split(",")
+        .map((s: string) => s.trim())
+        .filter(Boolean);
+      const specialFeatures =
+        (values.specialFeatures as string)
+          ?.split(",")
+          .map((s: string) => s.trim())
+          .filter(Boolean) || [];
+
+      // Append all fields to FormData
+      formData.append("name", values.name);
+      formData.append("type", values.type);
+      formData.append("flavor", values.flavor);
+      formData.append("price", values.price.toString());
+      formData.append("pounds", values.pounds.toString());
+      formData.append("availability", values.availability.toString());
+      formData.append("description", values.description || "");
+
+      sizeOptions.forEach((opt) => formData.append("sizeOptions[]", opt));
+      specialFeatures.forEach((feat) =>
+        formData.append("specialFeatures[]", feat),
+      );
 
       if (imageFile) {
         formData.append("image", imageFile);

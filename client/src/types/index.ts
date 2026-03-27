@@ -1,9 +1,14 @@
 export interface User {
   id: string;
   email: string;
-  name?: string;
+  name: string;
   phone?: string;
   role: "ADMIN" | "USER";
+  createdAt: string;
+  updatedAt: string;
+  _count?: {
+    orders: number;
+  };
 }
 
 export interface Cake {
@@ -24,7 +29,7 @@ export interface Cake {
 
 export interface Order {
   id: string;
-  orderId?: string; // Add this to match the backend response for checkout
+  orderId?: string;
   userId: string;
   user?: User;
   total: number;

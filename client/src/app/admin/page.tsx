@@ -183,7 +183,15 @@ export default function AdminOverviewPage() {
     );
   }
 
-  const { overview, revenueByMonth, statusDistribution } = stats;
+  const {
+    totalRevenue,
+    totalOrders,
+    totalCakes,
+    totalUsers,
+    revenueByMonth,
+    statusDistribution,
+  } = stats;
+  const overview = { totalRevenue, totalOrders, totalCakes, totalUsers };
 
   return (
     <div className="space-y-10">
@@ -353,9 +361,10 @@ export default function AdminOverviewPage() {
                   />
                   <Tooltip
                     cursor={{ fill: "oklch(0.65 0.16 280 / 0.05)" }}
-                    formatter={(
-                      value: number | string | Array<number | string>,
-                    ) => [`$${Number(value).toFixed(2)}`, "Revenue"]}
+                    formatter={(value: unknown) => [
+                      `$${Number(value || 0).toFixed(2)}`,
+                      "Revenue",
+                    ]}
                     contentStyle={{
                       borderRadius: "16px",
                       border: "none",
