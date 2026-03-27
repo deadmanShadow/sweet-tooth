@@ -23,9 +23,9 @@ const cakeSchema = z.object({
   flavor: z
     .string()
     .min(2, { message: "Flavor must be at least 2 characters" }),
-  price: z.coerce.number().min(0, { message: "Price must be positive" }),
-  pounds: z.coerce.number().min(0, { message: "Pounds must be positive" }),
-  availability: z.boolean().default(true),
+  price: z.number().min(0, { message: "Price must be positive" }),
+  pounds: z.number().min(0, { message: "Pounds must be positive" }),
+  availability: z.boolean(),
   description: z.string().optional(),
   sizeOptions: z.string(),
   specialFeatures: z.string().optional(),
@@ -33,6 +33,18 @@ const cakeSchema = z.object({
 
 interface CakeFormProps {
   initialData?: Cake;
+}
+
+interface CakeFormValues {
+  name: string;
+  type: string;
+  flavor: string;
+  price: number;
+  pounds: number;
+  availability: boolean;
+  description?: string;
+  sizeOptions: string;
+  specialFeatures?: string;
 }
 
 export function CakeForm({ initialData }: CakeFormProps) {
@@ -49,7 +61,7 @@ export function CakeForm({ initialData }: CakeFormProps) {
     setValue,
     watch,
     formState: { errors },
-  } = useForm<z.input<typeof cakeSchema>>({
+  } = useForm<CakeFormValues>({
     resolver: zodResolver(cakeSchema),
     defaultValues: {
       name: initialData?.name || "",
@@ -78,18 +90,18 @@ export function CakeForm({ initialData }: CakeFormProps) {
     }
   };
 
-  const onSubmit = async (values: any) => {
+  const onSubmit = async (values: CakeFormValues) => {
     setIsLoading(true);
     try {
       const formData = new FormData();
 
       // Transform strings to arrays
-      const sizeOptions = (values.sizeOptions as string)
+      const sizeOptions = values.sizeOptions
         .split(",")
         .map((s: string) => s.trim())
         .filter(Boolean);
       const specialFeatures =
-        (values.specialFeatures as string)
+        values.specialFeatures
           ?.split(",")
           .map((s: string) => s.trim())
           .filter(Boolean) || [];
@@ -221,7 +233,7 @@ export function CakeForm({ initialData }: CakeFormProps) {
                 id="price"
                 type="number"
                 step="0.01"
-                {...register("price")}
+                {...register("price", { valueAsNumber: true })}
               />
               {errors.price && (
                 <p className="text-sm text-destructive">
@@ -236,7 +248,7 @@ export function CakeForm({ initialData }: CakeFormProps) {
                 id="pounds"
                 type="number"
                 step="0.1"
-                {...register("pounds")}
+                {...register("pounds", { valueAsNumber: true })}
               />
               {errors.pounds && (
                 <p className="text-sm text-destructive">

@@ -43,10 +43,12 @@ const COLORS = ["#8b5cf6", "#a78bfa", "#7c3aed", "#6d28d9", "#4c1d95"];
 
 export default function AdminOverviewPage() {
   const [stats, setStats] = useState<{
-    totalRevenue: number;
-    totalOrders: number;
-    totalCakes: number;
-    totalUsers: number;
+    overview: {
+      totalRevenue: number;
+      totalOrders: number;
+      totalCakes: number;
+      totalUsers: number;
+    };
     revenueByMonth: { month: string; revenue: number }[];
     statusDistribution: { status: string; count: number }[];
   } | null>(null);
@@ -183,15 +185,7 @@ export default function AdminOverviewPage() {
     );
   }
 
-  const {
-    totalRevenue,
-    totalOrders,
-    totalCakes,
-    totalUsers,
-    revenueByMonth,
-    statusDistribution,
-  } = stats;
-  const overview = { totalRevenue, totalOrders, totalCakes, totalUsers };
+  const { overview, revenueByMonth, statusDistribution } = stats;
 
   return (
     <div className="space-y-10">

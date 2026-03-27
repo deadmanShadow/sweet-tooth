@@ -92,10 +92,12 @@ export const orderService = {
     return response.data;
   },
   getStats: async (): Promise<{
-    totalRevenue: number;
-    totalOrders: number;
-    totalCakes: number;
-    totalUsers: number;
+    overview: {
+      totalRevenue: number;
+      totalOrders: number;
+      totalCakes: number;
+      totalUsers: number;
+    };
     revenueByMonth: { month: string; revenue: number }[];
     statusDistribution: { status: string; count: number }[];
   }> => {

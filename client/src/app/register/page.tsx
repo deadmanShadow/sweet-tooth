@@ -26,9 +26,7 @@ const registerSchema = z
     email: z.string().email({ message: "Invalid email address" }),
     phone: z
       .string()
-      .min(10, { message: "Phone number must be at least 10 digits" })
-      .optional()
-      .or(z.literal("")),
+      .min(11, { message: "Phone number must be at least 11 digits" }),
     password: z
       .string()
       .min(6, { message: "Password must be at least 6 characters" }),
@@ -125,11 +123,11 @@ export default function RegisterPage() {
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number (optional)</Label>
+              <Label htmlFor="phone">Phone Number</Label>
               <Input
                 id="phone"
                 type="tel"
-                placeholder="+1 (555) 000-0000"
+                placeholder="+8801700000000"
                 {...register("phone")}
                 disabled={isLoading}
               />
@@ -144,6 +142,7 @@ export default function RegisterPage() {
               <Input
                 id="password"
                 type="password"
+                placeholder="*******"
                 {...register("password")}
                 disabled={isLoading}
               />
@@ -158,6 +157,7 @@ export default function RegisterPage() {
               <Input
                 id="confirmPassword"
                 type="password"
+                placeholder="*******"
                 {...register("confirmPassword")}
                 disabled={isLoading}
               />

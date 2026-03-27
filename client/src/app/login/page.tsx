@@ -104,6 +104,7 @@ function LoginForm() {
               <Input
                 id="password"
                 type="password"
+                placeholder="*******"
                 {...register("password")}
                 disabled={isLoading}
               />
