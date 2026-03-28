@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "CustomRequest" ADD COLUMN     "cost" DOUBLE PRECISION,
+ADD COLUMN     "price" DOUBLE PRECISION;

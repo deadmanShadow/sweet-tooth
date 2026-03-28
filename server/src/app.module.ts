@@ -7,6 +7,7 @@ import { envValidationSchema } from './config/validate';
 import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CakesModule } from './modules/cakes/cakes.module';
+import { CustomRequestsModule } from './modules/custom-requests/custom-requests.module';
 import { EchoModule } from './modules/echo/echo.module';
 import { HealthModule } from './modules/health/health.module';
 import { OrdersModule } from './modules/orders/orders.module';
@@ -20,6 +21,7 @@ import { OrdersModule } from './modules/orders/orders.module';
       validationSchema: envValidationSchema,
     }),
     DatabaseModule,
+    CustomRequestsModule,
     HealthModule,
     EchoModule,
     AuthModule,

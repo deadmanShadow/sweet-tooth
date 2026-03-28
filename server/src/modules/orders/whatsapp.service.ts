@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Cake, Order, OrderItem } from '@prisma/client';
+import { Cake, CustomRequest, Order, OrderItem } from '@prisma/client';
 
 export type OrderWithItemsAndUser = Order & {
   items: (OrderItem & { cake: Cake })[];
@@ -9,7 +9,7 @@ export type OrderWithItemsAndUser = Order & {
     name: string;
     email: string;
     phone: string | null;
-  };
+  } | null;
 };
 
 @Injectable()
@@ -20,27 +20,80 @@ export class WhatsAppService {
     const itemsList = order.items
       .map(
         (item) =>
-          `🍰 *${item.cake.name}* (x${item.quantity}) - $${(
-            item.price * item.quantity
-          ).toFixed(2)}`,
+          `• ${item.cake.name} (x${item.quantity}) - ${item.price * item.quantity} BDT`,
       )
       .join('\n');
 
-    return `🛍️ *New Order #${order.id.slice(-8).toUpperCase()}*
+    const customerName = order.user?.name || order.customerName || 'Guest';
+    const customerPhone = order.user?.phone || order.customerPhone || 'N/A';
+    const customerAddress = order.customerAddress || 'N/A';
+    const locationStr =
+      order.location === 'INSIDE' ? 'Inside Cumilla' : 'Outside Cumilla';
+    const subtotal = order.total - order.deliveryFee;
 
-👤 *Customer Details:*
-• *Name:* ${order.user.name}
-• *Phone:* ${order.user.phone || 'N/A'}
-• *Email:* ${order.user.email}
+    return `🧁 *New Cake Order Request*
 
-🛒 *Order Items:*
+🆔 Order ID: #${order.id.slice(-8).toUpperCase()}
+
+━━━━━━━━━━━━━━━
+📦 *Order Details:*
+
 ${itemsList}
 
-💰 *Total Amount: $${order.total.toFixed(2)}*
+━━━━━━━━━━━━━━━
+💰 *Pricing:*
+Subtotal: ${subtotal} BDT
+Delivery Fee: ${order.deliveryFee} BDT
+Total: ${order.total} BDT
 
-✅ *Status: PENDING*
+━━━━━━━━━━━━━━━
+🚚 *Delivery Information:*
+Name: ${customerName}
+Phone: ${customerPhone}
+Address: ${customerAddress}
+Location: ${locationStr}
 
-Thank you for choosing Sweet Tooth! We'll contact you soon.`;
+━━━━━━━━━━━━━━━
+📝 *Note:*
+Please confirm this order and provide delivery time.
+
+Thank you! 😊`;
+  }
+
+  generateCustomRequestMessage(request: CustomRequest): string {
+    const imagesList =
+      request.images.length > 0
+        ? `📸 Images attached in form`
+        : '📸 No images attached';
+
+    return `🎂 *Custom Cake Request*
+
+━━━━━━━━━━━━━━━
+👤 *Customer Info:*
+Name: ${request.customerName}
+Phone: ${request.customerPhone}
+
+━━━━━━━━━━━━━━━
+🧁 *Cake Details:*
+Type: ${request.type}
+Flavor: ${request.flavor}
+Weight: ${request.pounds} pounds
+Size: ${request.size}
+
+━━━━━━━━━━━━━━━
+✨ *Special Features:*
+${request.features || 'None'}
+
+━━━━━━━━━━━━━━━
+📝 *Description:*
+${request.description || 'No description provided'}
+
+━━━━━━━━━━━━━━━
+${imagesList}
+
+Please review and let me know the price & availability.
+
+Thank you! 😊`;
   }
 
   getWhatsAppLink(message: string): string {

@@ -12,6 +12,7 @@ import {
   LogOut,
   Menu,
   ShoppingBag,
+  Sparkles,
   Users,
   X,
 } from "lucide-react";
@@ -34,6 +35,11 @@ const adminSidebarItems = [
     title: "Orders",
     href: "/admin/orders",
     icon: ShoppingBag,
+  },
+  {
+    title: "Custom Requests",
+    href: "/admin/custom-requests",
+    icon: Sparkles,
   },
   {
     title: "Users",
@@ -63,17 +69,23 @@ export default function AdminLayout({
   useEffect(() => {
     if (!isLoading && user?.role === "ADMIN") {
       gsap.fromTo(
-        sidebarRef.current,
-        { x: -100, opacity: 0 },
-        { x: 0, opacity: 1, duration: 0.8, ease: "power3.out" },
-      );
-      gsap.fromTo(
         mainRef.current,
         { y: 20, opacity: 0 },
         { y: 0, opacity: 1, duration: 0.8, delay: 0.2, ease: "power3.out" },
       );
     }
   }, [isLoading, user]);
+
+  useEffect(() => {
+    if (isSidebarOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isSidebarOpen]);
 
   if (isLoading || !user || user.role !== "ADMIN") {
     return (
@@ -86,7 +98,7 @@ export default function AdminLayout({
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary/20">
       {/* Mobile Header */}
-      <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-md lg:hidden">
+      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-md lg:hidden">
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
@@ -106,13 +118,15 @@ export default function AdminLayout({
         </Link>
       </header>
 
-      <div className="flex">
-        {/* Sidebar Desktop */}
+      <div className="flex w-full h-[calc(100vh-4rem)] lg:h-screen overflow-hidden">
+        {/* Sidebar */}
         <aside
           ref={sidebarRef}
           className={cn(
-            "fixed inset-y-0 left-0 z-50 w-72 transform bg-card transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 border-r shadow-xl",
-            isSidebarOpen ? "translate-x-0" : "-translate-x-full",
+            "fixed inset-y-0 left-0 z-50 w-72 bg-card border-r shadow-xl transition-all duration-300 ease-in-out lg:relative lg:translate-x-0 lg:opacity-100 lg:visible lg:pointer-events-auto",
+            isSidebarOpen
+              ? "translate-x-0 opacity-100 visible pointer-events-auto"
+              : "-translate-x-full opacity-0 invisible pointer-events-none lg:translate-x-0 lg:opacity-100 lg:visible lg:pointer-events-auto",
           )}
         >
           <div className="flex h-full flex-col p-6">
@@ -197,17 +211,19 @@ export default function AdminLayout({
         {/* Backdrop mobile */}
         {isSidebarOpen && (
           <div
-            className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm lg:hidden"
+            className="fixed inset-0 z-40 bg-background/60 backdrop-blur-sm lg:hidden transition-opacity duration-300"
             onClick={() => setIsSidebarOpen(false)}
           />
         )}
 
-        {/* Main Content */}
-        <main ref={mainRef} className="flex-1 overflow-auto bg-muted/20">
-          <div className="container mx-auto max-w-7xl p-6 lg:p-10">
-            {children}
-          </div>
-        </main>
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col min-w-0">
+          <main ref={mainRef} className="flex-1 bg-muted/20 overflow-y-auto">
+            <div className="container mx-auto p-4 md:p-6 lg:p-10">
+              {children}
+            </div>
+          </main>
+        </div>
       </div>
     </div>
   );

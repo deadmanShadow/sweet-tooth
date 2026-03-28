@@ -1,5 +1,15 @@
 "use client";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -25,14 +35,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import Swal from "sweetalert2";
-import withReactContent from "sweetalert2-react-content";
-
-const MySwal = withReactContent(Swal);
 
 export default function AdminCakesPage() {
   const [cakes, setCakes] = useState<Cake[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [cakeToDelete, setCakeToDelete] = useState<Cake | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const fetchCakes = async () => {
@@ -62,57 +71,73 @@ export default function AdminCakesPage() {
     }
   }, [isLoading]);
 
-  const handleDelete = async (id: string, name: string) => {
-    const result = await MySwal.fire({
-      title: (
-        <p className="text-xl font-black uppercase tracking-tight text-primary">
-          Destroy Recipe?
-        </p>
-      ),
-      html: (
-        <p className="text-sm font-medium text-muted-foreground">
-          Are you sure you want to remove <b>{name}</b>? This cannot be undone!
-        </p>
-      ),
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Yes, delete it!",
-      cancelButtonText: "No, save it",
-      confirmButtonColor: "oklch(0.55 0.18 280)",
-      cancelButtonColor: "oklch(0.45 0.08 280)",
-      background: "oklch(0.99 0.005 280)",
-      customClass: {
-        popup: "rounded-3xl border-none shadow-2xl",
-        confirmButton:
-          "rounded-xl font-bold uppercase tracking-widest text-xs px-6 py-3",
-        cancelButton:
-          "rounded-xl font-bold uppercase tracking-widest text-xs px-6 py-3",
-      },
-    });
+  const handleDelete = async () => {
+    if (!cakeToDelete) return;
 
-    if (result.isConfirmed) {
-      try {
-        await cakeService.delete(id);
-        MySwal.fire({
-          title: "Deleted!",
-          text: "The cake has been removed from inventory.",
-          icon: "success",
-          confirmButtonColor: "oklch(0.55 0.18 280)",
-        });
-        fetchCakes();
-      } catch {
-        MySwal.fire({
-          title: "Error!",
-          text: "Failed to delete cake.",
-          icon: "error",
-          confirmButtonColor: "oklch(0.55 0.18 280)",
-        });
-      }
+    try {
+      setIsDeleting(true);
+      await cakeService.delete(cakeToDelete.id);
+      toast.success("Cake removed from the collection.");
+      setIsDeleteDialogOpen(false);
+      setCakeToDelete(null);
+      fetchCakes();
+    } catch {
+      toast.error("Failed to delete cake.");
+    } finally {
+      setIsDeleting(false);
     }
+  };
+
+  const openDeleteDialog = (cake: Cake) => {
+    setCakeToDelete(cake);
+    setIsDeleteDialogOpen(true);
   };
 
   return (
     <div ref={containerRef} className="space-y-10">
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent className="rounded-2xl border-none shadow-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-black text-primary uppercase">
+              Destroy Recipe?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="font-medium text-muted-foreground/80">
+              Are you sure you want to remove{" "}
+              <b className="text-primary">{cakeToDelete?.name}</b>? This cannot
+              be undone!
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel
+              disabled={isDeleting}
+              className="rounded-xl font-bold uppercase tracking-widest text-[10px] border-primary/10"
+            >
+              No, save it
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleDelete();
+              }}
+              disabled={isDeleting}
+              className="rounded-xl font-black uppercase tracking-widest text-[10px] bg-destructive hover:bg-destructive/90 text-destructive-foreground shadow-lg shadow-destructive/20"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Destroying...
+                </>
+              ) : (
+                "Yes, delete it!"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-4xl font-black tracking-tight text-primary uppercase">
@@ -257,7 +282,7 @@ export default function AdminCakesPage() {
                           variant="outline"
                           size="icon"
                           className="h-9 w-9 rounded-xl border-destructive/20 text-destructive hover:bg-destructive hover:text-white hover:border-destructive transition-all shadow-sm"
-                          onClick={() => handleDelete(cake.id, cake.name)}
+                          onClick={() => openDeleteDialog(cake)}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

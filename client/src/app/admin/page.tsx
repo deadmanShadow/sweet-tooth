@@ -1,5 +1,15 @@
 "use client";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,6 +26,7 @@ import {
   Loader2,
   RotateCcw,
   ShoppingBag,
+  Sparkles,
   TrendingUp,
   Users,
 } from "lucide-react";
@@ -34,10 +45,6 @@ import {
   YAxis,
 } from "recharts";
 import { toast } from "sonner";
-import Swal from "sweetalert2";
-import withReactContent from "sweetalert2-react-content";
-
-const MySwal = withReactContent(Swal);
 
 const COLORS = ["#8b5cf6", "#a78bfa", "#7c3aed", "#6d28d9", "#4c1d95"];
 
@@ -48,12 +55,16 @@ export default function AdminOverviewPage() {
       totalOrders: number;
       totalCakes: number;
       totalUsers: number;
+      totalCustomRequests?: number;
     };
     revenueByMonth: { month: string; revenue: number }[];
-    statusDistribution: { status: string; count: number }[];
+    orderStatusDistribution: { status: string; count: number }[];
+    customRequestStatusDistribution: { status: string; count: number }[];
+    customRequestsByMonth: { month: string; count: number }[];
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isResetting, setIsResetting] = useState(false);
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
 
   const cardsRef = useRef<HTMLDivElement>(null);
   const chartsRef = useRef<HTMLDivElement>(null);
@@ -111,55 +122,16 @@ export default function AdminOverviewPage() {
   }, [stats]);
 
   const handleReset = async () => {
-    const result = await MySwal.fire({
-      title: (
-        <p className="text-xl font-black uppercase tracking-tight text-primary">
-          Wipe Analytics?
-        </p>
-      ),
-      html: (
-        <p className="text-sm font-medium text-muted-foreground">
-          This will permanently delete all orders and revenue data. You cannot
-          undo this action!
-        </p>
-      ),
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Yes, reset everything!",
-      cancelButtonText: "Cancel",
-      confirmButtonColor: "oklch(0.55 0.18 280)",
-      cancelButtonColor: "oklch(0.45 0.08 280)",
-      background: "oklch(0.99 0.005 280)",
-      customClass: {
-        popup: "rounded-3xl border-none shadow-2xl",
-        confirmButton:
-          "rounded-xl font-bold uppercase tracking-widest text-xs px-6 py-3",
-        cancelButton:
-          "rounded-xl font-bold uppercase tracking-widest text-xs px-6 py-3",
-      },
-    });
-
-    if (result.isConfirmed) {
-      try {
-        setIsResetting(true);
-        await orderService.resetOrders();
-        MySwal.fire({
-          title: "Reset!",
-          text: "Analytics data has been wiped.",
-          icon: "success",
-          confirmButtonColor: "oklch(0.55 0.18 280)",
-        });
-        fetchStats();
-      } catch {
-        MySwal.fire({
-          title: "Error!",
-          text: "Failed to reset analytics.",
-          icon: "error",
-          confirmButtonColor: "oklch(0.55 0.18 280)",
-        });
-      } finally {
-        setIsResetting(false);
-      }
+    try {
+      setIsResetting(true);
+      await orderService.resetOrders();
+      toast.success("Analytics data has been wiped.");
+      setIsResetDialogOpen(false);
+      fetchStats();
+    } catch {
+      toast.error("Failed to reset analytics.");
+    } finally {
+      setIsResetting(false);
     }
   };
 
@@ -185,24 +157,69 @@ export default function AdminOverviewPage() {
     );
   }
 
-  const { overview, revenueByMonth, statusDistribution } = stats;
+  const {
+    overview,
+    revenueByMonth,
+    orderStatusDistribution,
+    customRequestStatusDistribution,
+    customRequestsByMonth,
+  } = stats;
 
   return (
     <div className="space-y-10">
+      <AlertDialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
+        <AlertDialogContent className="rounded-2xl border-none shadow-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-black text-primary uppercase">
+              Wipe Analytics?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="font-medium text-muted-foreground/80">
+              This will permanently delete all orders and revenue data. You
+              cannot undo this action!
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel
+              disabled={isResetting}
+              className="rounded-xl font-bold uppercase tracking-widest text-[10px] border-primary/10"
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleReset();
+              }}
+              disabled={isResetting}
+              className="rounded-xl font-black uppercase tracking-widest text-[10px] bg-destructive hover:bg-destructive/90 text-destructive-foreground shadow-lg shadow-destructive/20"
+            >
+              {isResetting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Wiping...
+                </>
+              ) : (
+                "Yes, reset everything!"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-4xl font-black tracking-tight text-primary uppercase">
-            Bakery Analytics
+            Admin Dashboard
           </h2>
           <p className="text-muted-foreground font-medium">
-            Real-time performance metrics for your sweet business.
+            Real-time analytics for my sweet tooth kingdom.
           </p>
         </div>
         <Button
-          variant="destructive"
-          onClick={handleReset}
+          onClick={() => setIsResetDialogOpen(true)}
           disabled={isResetting}
-          className="gap-2 rounded-xl shadow-lg shadow-destructive/20 font-bold hover:scale-105 transition-transform"
+          variant="outline"
+          className="rounded-xl font-black uppercase tracking-widest text-[10px] h-12 px-6 border-destructive/20 text-destructive hover:bg-destructive hover:text-white transition-all shadow-lg shadow-destructive/5"
         >
           {isResetting ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -214,7 +231,10 @@ export default function AdminOverviewPage() {
       </div>
 
       {/* Overview Cards */}
-      <div ref={cardsRef} className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div
+        ref={cardsRef}
+        className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
+      >
         <Card className="border-none shadow-xl shadow-primary/5 bg-gradient-to-br from-card to-primary/5 overflow-hidden group">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
@@ -250,6 +270,25 @@ export default function AdminOverviewPage() {
             </div>
             <p className="mt-2 text-xs text-muted-foreground font-medium">
               Orders processed
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-none shadow-xl shadow-primary/5 bg-gradient-to-br from-card to-primary/5 overflow-hidden group">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+              Custom Requests
+            </CardTitle>
+            <div className="p-2 rounded-lg bg-pink-500/10 text-pink-500 group-hover:scale-110 transition-transform">
+              <Sparkles className="h-4 w-4" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-black text-primary">
+              {overview.totalCustomRequests || 0}
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground font-medium">
+              Pending designs
             </p>
           </CardContent>
         </Card>
@@ -382,10 +421,10 @@ export default function AdminOverviewPage() {
         <Card className="border-none shadow-xl shadow-primary/5">
           <CardHeader>
             <CardTitle className="text-xl font-black text-primary">
-              Order Status
+              Order Lifecycle
             </CardTitle>
             <CardDescription className="font-medium text-muted-foreground/80">
-              Current breakdown of order lifecycle
+              Breakdown of regular order statuses
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -393,7 +432,7 @@ export default function AdminOverviewPage() {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={statusDistribution}
+                    data={orderStatusDistribution}
                     cx="50%"
                     cy="50%"
                     innerRadius={80}
@@ -403,7 +442,7 @@ export default function AdminOverviewPage() {
                     nameKey="status"
                     stroke="none"
                   >
-                    {statusDistribution.map((_, index) => (
+                    {orderStatusDistribution.map((_, index) => (
                       <Cell
                         key={`cell-${index}`}
                         fill={COLORS[index % COLORS.length]}
@@ -430,6 +469,141 @@ export default function AdminOverviewPage() {
                     )}
                   />
                 </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-none shadow-xl shadow-primary/5">
+          <CardHeader>
+            <CardTitle className="text-xl font-black text-primary">
+              Custom Request Stats
+            </CardTitle>
+            <CardDescription className="font-medium text-muted-foreground/80">
+              Breakdown of design request statuses
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[350px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={customRequestStatusDistribution}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={80}
+                    outerRadius={110}
+                    paddingAngle={8}
+                    dataKey="count"
+                    nameKey="status"
+                    stroke="none"
+                  >
+                    {customRequestStatusDistribution.map((_, index) => (
+                      <Cell
+                        key={`cell-custom-${index}`}
+                        fill={COLORS[(index + 2) % COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: "16px",
+                      border: "none",
+                      boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
+                      backgroundColor: "oklch(0.99 0.005 280)",
+                      padding: "12px",
+                      fontWeight: 700,
+                    }}
+                  />
+                  <Legend
+                    verticalAlign="bottom"
+                    height={36}
+                    formatter={(value) => (
+                      <span className="text-xs font-bold text-muted-foreground uppercase">
+                        {value}
+                      </span>
+                    )}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-none shadow-xl shadow-primary/5">
+          <CardHeader>
+            <CardTitle className="text-xl font-black text-primary">
+              Monthly Custom Cravings
+            </CardTitle>
+            <CardDescription className="font-medium text-muted-foreground/80">
+              Number of design requests per month
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[350px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={customRequestsByMonth}>
+                  <defs>
+                    <linearGradient
+                      id="customBarGradient"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop offset="0%" stopColor="#ec4899" stopOpacity={1} />
+                      <stop
+                        offset="100%"
+                        stopColor="#ec4899"
+                        stopOpacity={0.6}
+                      />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="oklch(0.88 0.03 280)"
+                  />
+                  <XAxis
+                    dataKey="month"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{
+                      fill: "oklch(0.45 0.08 280)",
+                      fontSize: 12,
+                      fontWeight: 700,
+                    }}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{
+                      fill: "oklch(0.45 0.08 280)",
+                      fontSize: 12,
+                      fontWeight: 700,
+                    }}
+                  />
+                  <Tooltip
+                    cursor={{ fill: "oklch(0.65 0.16 280 / 0.05)" }}
+                    formatter={(value: unknown) => [
+                      `${Number(value || 0)} requests`,
+                      "Volume",
+                    ]}
+                    contentStyle={{
+                      borderRadius: "16px",
+                      border: "none",
+                      boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
+                      backgroundColor: "oklch(0.99 0.005 280)",
+                      padding: "12px",
+                      fontWeight: 700,
+                    }}
+                  />
+                  <Bar
+                    dataKey="count"
+                    fill="url(#customBarGradient)"
+                    radius={[8, 8, 0, 0]}
+                  />
+                </BarChart>
               </ResponsiveContainer>
             </div>
           </CardContent>

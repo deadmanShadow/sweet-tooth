@@ -14,53 +14,108 @@ export class OrdersService {
   ) {}
 
   async getStats() {
-    const [totalOrders, revenueData, totalUsers, totalCakes] =
-      await Promise.all([
-        this.prisma.order.count(),
-        this.prisma.order.aggregate({
-          where: {
-            status: { in: [OrderStatus.CONFIRMED, OrderStatus.DELIVERED] },
-          },
-          _sum: { total: true },
-        }),
-        this.prisma.user.count({ where: { role: 'USER' } }),
-        this.prisma.cake.count(),
-      ]);
+    const [
+      totalOrders,
+      orderRevenueData,
+      customRequestRevenueData,
+      totalUsers,
+      totalCakes,
+      totalCustomRequests,
+    ] = await Promise.all([
+      this.prisma.order.count(),
+      this.prisma.order.aggregate({
+        where: {
+          status: { in: [OrderStatus.CONFIRMED, OrderStatus.DELIVERED] },
+        },
+        _sum: { total: true },
+      }),
+      this.prisma.customRequest.aggregate({
+        where: {
+          status: { in: [OrderStatus.CONFIRMED, OrderStatus.DELIVERED] },
+        },
+        _sum: { price: true },
+      }),
+      this.prisma.user.count({ where: { role: 'USER' } }),
+      this.prisma.cake.count(),
+      this.prisma.customRequest.count(),
+    ]);
+
+    const totalRevenue =
+      (orderRevenueData._sum.total || 0) +
+      (customRequestRevenueData._sum.price || 0);
 
     // Monthly grouped revenue (only for confirmed/delivered)
+    // Using a more robust query that combines both tables
     const revenueByMonth = await this.prisma.$queryRaw<
       { month: string; revenue: number }[]
     >`
-      SELECT TO_CHAR("createdAt", 'Mon') as month, SUM(total)::float as revenue
-      FROM "Order"
-      WHERE status IN ('CONFIRMED', 'DELIVERED')
+      SELECT month, SUM(revenue)::float as revenue
+      FROM (
+        SELECT TO_CHAR("createdAt", 'Mon') as month, SUM(total) as revenue, MIN("createdAt") as min_date
+        FROM "Order"
+        WHERE status IN ('CONFIRMED', 'DELIVERED')
+        GROUP BY month
+        
+        UNION ALL
+        
+        SELECT TO_CHAR("createdAt", 'Mon') as month, SUM(price) as revenue, MIN("createdAt") as min_date
+        FROM "CustomRequest"
+        WHERE status IN ('CONFIRMED', 'DELIVERED') AND price IS NOT NULL
+        GROUP BY month
+      ) combined
       GROUP BY month
-      ORDER BY MIN("createdAt")
+      ORDER BY MIN(min_date)
     `;
 
-    const statusDistribution = await this.prisma.order.groupBy({
+    const orderStatusDistribution = await this.prisma.order.groupBy({
       by: ['status'],
       _count: {
         status: true,
       },
     });
 
+    const customRequestStatusDistribution =
+      await this.prisma.customRequest.groupBy({
+        by: ['status'],
+        _count: {
+          status: true,
+        },
+      });
+
+    // Monthly grouped custom requests
+    const customRequestsByMonth = await this.prisma.$queryRaw<
+      { month: string; count: number }[]
+    >`
+      SELECT TO_CHAR("createdAt", 'Mon') as month, COUNT(*)::int as count
+      FROM "CustomRequest"
+      GROUP BY month
+      ORDER BY MIN("createdAt")
+    `;
+
     return {
       overview: {
         totalOrders,
-        totalRevenue: revenueData._sum.total || 0,
+        totalRevenue,
         totalUsers,
         totalCakes,
+        totalCustomRequests,
       },
       revenueByMonth,
-      statusDistribution: statusDistribution.map((item) => ({
+      orderStatusDistribution: orderStatusDistribution.map((item) => ({
         status: item.status,
         count: item._count.status,
       })),
+      customRequestStatusDistribution: customRequestStatusDistribution.map(
+        (item) => ({
+          status: item.status,
+          count: item._count.status,
+        }),
+      ),
+      customRequestsByMonth,
     };
   }
 
-  async create(userId: string, dto: CreateOrderDto) {
+  async create(userId: string | undefined, dto: CreateOrderDto) {
     if (!dto.items || dto.items.length === 0) {
       throw new NotFoundException('Order items cannot be empty');
     }
@@ -90,10 +145,19 @@ export class OrdersService {
 
     // Use Prisma transaction to create order and items
     const order = await this.prisma.$transaction(async (tx) => {
+      // Securely calculate delivery fee on the backend
+      const deliveryFee = dto.location === 'OUTSIDE' ? 120 : 60;
+      const finalTotal = total + deliveryFee;
+
       return tx.order.create({
         data: {
           userId,
-          total,
+          customerName: dto.customerName,
+          customerPhone: dto.customerPhone,
+          customerAddress: dto.customerAddress,
+          location: dto.location,
+          deliveryFee,
+          total: finalTotal,
           status: OrderStatus.PENDING,
           items: {
             create: orderItemsData,

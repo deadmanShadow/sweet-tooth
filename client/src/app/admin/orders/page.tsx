@@ -240,6 +240,9 @@ export default function AdminOrdersPage() {
                   Customer
                 </TableHead>
                 <TableHead className="font-black uppercase tracking-widest text-[10px] text-primary h-14">
+                  Location & Fee
+                </TableHead>
+                <TableHead className="font-black uppercase tracking-widest text-[10px] text-primary h-14">
                   Date
                 </TableHead>
                 <TableHead className="font-black uppercase tracking-widest text-[10px] text-primary h-14 text-right">
@@ -288,10 +291,32 @@ export default function AdminOrdersPage() {
                     <TableCell className="py-5">
                       <div className="flex flex-col">
                         <span className="font-black text-sm">
-                          {order.user?.name}
+                          {order.user?.name || order.customerName || "Guest"}
                         </span>
                         <span className="text-xs text-muted-foreground font-medium">
-                          {order.user?.email}
+                          {order.user?.phone ||
+                            order.customerPhone ||
+                            "No contact"}
+                        </span>
+                        {order.customerAddress && (
+                          <span className="text-[10px] text-muted-foreground/60 mt-0.5 max-w-[150px] truncate">
+                            {order.customerAddress}
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-5">
+                      <div className="flex flex-col">
+                        <Badge
+                          variant="secondary"
+                          className="text-[10px] font-bold uppercase tracking-tighter w-fit mb-1"
+                        >
+                          {order.location === "INSIDE"
+                            ? "Inside Cumilla"
+                            : "Outside Cumilla"}
+                        </Badge>
+                        <span className="text-xs font-black text-muted-foreground">
+                          Fee: ${order.deliveryFee?.toFixed(2) || "0.00"}
                         </span>
                       </div>
                     </TableCell>

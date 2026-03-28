@@ -1,5 +1,5 @@
 import api from "@/lib/api";
-import { Cake, Order, User } from "@/types";
+import { Cake, CustomRequest, Order, User } from "@/types";
 
 export const cakeService = {
   getAll: async (): Promise<Cake[]> => {
@@ -25,25 +25,18 @@ export const cakeService = {
 
 export const authService = {
   login: async (credentials: { email: string; password?: string }) => {
-    const response = await api.post<{ accessToken: string }>("/auth/login", credentials);
-    return response.data;
-  },
-  register: async (data: Partial<User> & { password?: string }) => {
-    const response = await api.post("/auth/register", data);
+    const response = await api.post<{ accessToken: string }>(
+      "/auth/login",
+      credentials,
+    );
     return response.data;
   },
 };
 
 export const userService = {
   getProfile: async (): Promise<User> => {
-    const response = await api.get("/users/profile");
-    return response.data;
-  },
-  updateProfile: async (
-    data: Partial<User & { password?: string }>,
-  ): Promise<User> => {
-    const response = await api.patch("/users/profile", data);
-    return response.data;
+    const response = await api.get<{ user: User }>("/auth/me");
+    return response.data.user;
   },
   getAll: async (): Promise<User[]> => {
     const response = await api.get("/users/admin/all");
@@ -57,12 +50,12 @@ export const userService = {
 export const orderService = {
   create: async (data: {
     items: { cakeId: string; quantity: number }[];
+    customerName?: string;
+    customerPhone?: string;
+    customerAddress?: string;
+    location?: "INSIDE" | "OUTSIDE";
   }): Promise<Order> => {
     const response = await api.post("/orders", data);
-    return response.data;
-  },
-  getMyOrders: async (): Promise<Order[]> => {
-    const response = await api.get("/orders/my");
     return response.data;
   },
   getOrder: async (id: string): Promise<Order> => {
@@ -97,9 +90,12 @@ export const orderService = {
       totalOrders: number;
       totalCakes: number;
       totalUsers: number;
+      totalCustomRequests?: number;
     };
     revenueByMonth: { month: string; revenue: number }[];
-    statusDistribution: { status: string; count: number }[];
+    orderStatusDistribution: { status: string; count: number }[];
+    customRequestStatusDistribution: { status: string; count: number }[];
+    customRequestsByMonth: { month: string; count: number }[];
   }> => {
     const response = await api.get("/orders/stats");
     return response.data;
@@ -107,5 +103,50 @@ export const orderService = {
   resetOrders: async (): Promise<{ message: string }> => {
     const response = await api.post("/orders/reset");
     return response.data;
+  },
+};
+
+export const customRequestService = {
+  create: async (formData: FormData): Promise<CustomRequest> => {
+    const response = await api.post("/custom-requests", formData);
+    return response.data;
+  },
+  getAll: async (params?: {
+    status?: string;
+    startDate?: string;
+    endDate?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{
+    items: CustomRequest[];
+    meta: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
+  }> => {
+    const response = await api.get("/custom-requests", { params });
+    return response.data;
+  },
+  getById: async (id: string): Promise<CustomRequest> => {
+    const response = await api.get(`/custom-requests/${id}`);
+    return response.data;
+  },
+  updateStatus: async (
+    id: string,
+    status: CustomRequest["status"],
+    price?: number,
+    cost?: number,
+  ): Promise<CustomRequest> => {
+    const response = await api.patch(`/custom-requests/${id}/status`, {
+      status,
+      price,
+      cost,
+    });
+    return response.data;
+  },
+  delete: async (id: string): Promise<void> => {
+    await api.delete(`/custom-requests/${id}`);
   },
 };

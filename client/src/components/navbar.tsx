@@ -10,16 +10,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/use-auth";
 import { useCart } from "@/providers/cart-provider";
-import {
-  LayoutDashboard,
-  LogOut,
-  Menu,
-  Settings,
-  ShoppingCart,
-  X,
-} from "lucide-react";
+import { LayoutDashboard, LogOut, Menu, ShoppingCart, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
@@ -35,7 +29,7 @@ export function Navbar() {
         .map((n) => n[0])
         .join("")
         .toUpperCase()
-    : user?.email[0].toUpperCase();
+    : user?.email?.[0]?.toUpperCase() || "U";
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -60,8 +54,18 @@ export function Navbar() {
               width={90}
               height={100}
               className="object-contain mt-4"
+              style={{ height: "auto" }}
+              priority
             />
           </Link>
+          <nav className="hidden md:flex items-center space-x-6 ml-6">
+            <Link
+              href="/custom-cake"
+              className="text-sm font-medium transition-colors hover:text-primary"
+            >
+              Custom Cake
+            </Link>
+          </nav>
         </div>
 
         <div className="flex items-center space-x-2 md:space-x-4">
@@ -101,30 +105,20 @@ export function Navbar() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard" className="cursor-pointer">
-                    <LayoutDashboard className="mr-2 h-4 w-4" />
-                    Profile Dashboard
-                  </Link>
-                </DropdownMenuItem>
                 {user?.role === "ADMIN" && (
-                  <DropdownMenuItem asChild>
-                    <Link
-                      href="/admin"
-                      className="cursor-pointer font-bold text-primary"
-                    >
-                      <LayoutDashboard className="mr-2 h-4 w-4" />
-                      Admin Dashboard
-                    </Link>
-                  </DropdownMenuItem>
+                  <>
+                    <DropdownMenuItem asChild>
+                      <Link
+                        href="/admin"
+                        className="cursor-pointer font-bold text-primary"
+                      >
+                        <LayoutDashboard className="mr-2 h-4 w-4" />
+                        Admin Dashboard
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </>
                 )}
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard/settings" className="cursor-pointer">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Settings
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={logout}
                   className="cursor-pointer text-destructive focus:text-destructive"
@@ -136,54 +130,66 @@ export function Navbar() {
             </DropdownMenu>
           ) : (
             <div className="hidden md:flex items-center space-x-2">
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/login">Login</Link>
-              </Button>
-              <Button size="sm" asChild>
-                <Link href="/register">Register</Link>
-              </Button>
+              <Link
+                href="/login"
+                className="text-xs text-muted-foreground hover:text-primary transition-colors opacity-50 hover:opacity-100"
+              >
+                Login
+              </Link>
             </div>
           )}
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Navigation */}
       {isMobileMenuOpen && (
-        <div className="md:hidden border-t bg-background px-4 py-4 space-y-4 animate-in slide-in-from-top duration-300">
-          <nav className="flex flex-col space-y-4">
-            <Link
-              href="/"
-              className="text-lg font-medium"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Home
-            </Link>
-            <Link
-              href="/cakes"
-              className="text-lg font-medium"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Cakes
-            </Link>
-            {isAuthenticated && (
-              <Link
-                href="/dashboard/orders"
-                className="text-lg font-medium"
-                onClick={() => setIsMobileMenuOpen(false)}
+        <div className="md:hidden border-b bg-background p-4 flex flex-col space-y-4 animate-in slide-in-from-top duration-300">
+          <Link
+            href="/custom-cake"
+            className="text-sm font-medium transition-colors hover:text-primary"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            Custom Cake
+          </Link>
+          <Separator />
+          {isAuthenticated ? (
+            <>
+              <div className="flex flex-col space-y-1 py-2">
+                <p className="text-sm font-medium leading-none">
+                  {user?.name || "User"}
+                </p>
+                <p className="text-xs leading-none text-muted-foreground">
+                  {user?.email}
+                </p>
+              </div>
+              {user?.role === "ADMIN" && (
+                <Link
+                  href="/admin"
+                  className="flex items-center text-sm font-medium transition-colors hover:text-primary"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <LayoutDashboard className="mr-2 h-4 w-4" />
+                  Dashboard
+                </Link>
+              )}
+              <button
+                onClick={() => {
+                  logout();
+                  setIsMobileMenuOpen(false);
+                }}
+                className="flex items-center text-sm font-medium text-destructive transition-colors hover:text-destructive/80"
               >
-                My Orders
-              </Link>
-            )}
-            {!isAuthenticated && (
-              <Link
-                href="/login"
-                className="text-lg font-medium text-primary"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Login / Register
-              </Link>
-            )}
-          </nav>
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </button>
+            </>
+          ) : (
+            <div className="flex flex-col space-y-2 pt-2">
+              <Button asChild onClick={() => setIsMobileMenuOpen(false)}>
+                <Link href="/login">Login</Link>
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </header>

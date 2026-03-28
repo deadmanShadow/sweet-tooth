@@ -1,8 +1,17 @@
 "use client";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -11,6 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 import { userService } from "@/services/api.service";
 import { User } from "@/types";
 import { format } from "date-fns";
@@ -25,14 +35,17 @@ import {
   Users,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import Swal from "sweetalert2";
-import withReactContent from "sweetalert2-react-content";
-
-const MySwal = withReactContent(Swal);
+import { toast } from "sonner";
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const fetchUsers = async () => {
@@ -42,12 +55,7 @@ export default function AdminUsersPage() {
       setUsers(data);
     } catch (_error) {
       console.error("Failed to fetch users:", _error);
-      MySwal.fire({
-        icon: "error",
-        title: "Oops...",
-        text: "Failed to load users list!",
-        confirmButtonColor: "oklch(0.55 0.18 280)",
-      });
+      toast.error("Failed to load users list!");
     } finally {
       setIsLoading(false);
     }
@@ -67,57 +75,73 @@ export default function AdminUsersPage() {
     }
   }, [isLoading]);
 
-  const handleDelete = async (id: string, name: string) => {
-    const result = await MySwal.fire({
-      title: (
-        <p className="text-xl font-black uppercase tracking-tight text-primary">
-          Are you sure?
-        </p>
-      ),
-      html: (
-        <p className="text-sm font-medium text-muted-foreground">
-          You are about to banish <b>{name}</b> from the kingdom!
-        </p>
-      ),
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Yes, delete them!",
-      cancelButtonText: "No, keep them",
-      confirmButtonColor: "oklch(0.55 0.18 280)",
-      cancelButtonColor: "oklch(0.45 0.08 280)",
-      background: "oklch(0.99 0.005 280)",
-      customClass: {
-        popup: "rounded-3xl border-none shadow-2xl",
-        confirmButton:
-          "rounded-xl font-bold uppercase tracking-widest text-xs px-6 py-3",
-        cancelButton:
-          "rounded-xl font-bold uppercase tracking-widest text-xs px-6 py-3",
-      },
-    });
+  const handleDelete = async () => {
+    if (!userToDelete) return;
 
-    if (result.isConfirmed) {
-      try {
-        await userService.deleteUser(id);
-        MySwal.fire({
-          title: "Deleted!",
-          text: "User has been removed.",
-          icon: "success",
-          confirmButtonColor: "oklch(0.55 0.18 280)",
-        });
-        fetchUsers();
-      } catch {
-        MySwal.fire({
-          title: "Error!",
-          text: "Failed to delete user.",
-          icon: "error",
-          confirmButtonColor: "oklch(0.55 0.18 280)",
-        });
-      }
+    try {
+      setIsDeleting(true);
+      await userService.deleteUser(userToDelete.id);
+      toast.success("User banished from the kingdom.");
+      setIsDeleteDialogOpen(false);
+      setUserToDelete(null);
+      fetchUsers();
+    } catch {
+      toast.error("Failed to delete user.");
+    } finally {
+      setIsDeleting(false);
     }
+  };
+
+  const openDeleteDialog = (id: string, name: string) => {
+    setUserToDelete({ id, name });
+    setIsDeleteDialogOpen(true);
   };
 
   return (
     <div ref={containerRef} className="space-y-10">
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent className="rounded-2xl border-none shadow-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-black text-primary uppercase">
+              Are you sure?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="font-medium text-muted-foreground/80">
+              You are about to banish{" "}
+              <b className="text-primary">{userToDelete?.name}</b> from the
+              kingdom!
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel
+              disabled={isDeleting}
+              className="rounded-xl font-bold uppercase tracking-widest text-[10px] border-primary/10"
+            >
+              No, keep them
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleDelete();
+              }}
+              disabled={isDeleting}
+              className="rounded-xl font-black uppercase tracking-widest text-[10px] bg-destructive hover:bg-destructive/90 text-destructive-foreground shadow-lg shadow-destructive/20"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Banishing...
+                </>
+              ) : (
+                "Yes, delete them!"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-4xl font-black tracking-tight text-primary uppercase">
@@ -252,7 +276,7 @@ export default function AdminUsersPage() {
                           user.role === "ADMIN" &&
                             "opacity-20 cursor-not-allowed",
                         )}
-                        onClick={() => handleDelete(user.id, user.name)}
+                        onClick={() => openDeleteDialog(user.id, user.name)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -267,5 +291,3 @@ export default function AdminUsersPage() {
     </div>
   );
 }
-
-

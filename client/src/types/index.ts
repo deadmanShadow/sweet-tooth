@@ -29,8 +29,13 @@ export interface Cake {
 
 export interface Order {
   id: string;
-  orderId?: string;
-  userId: string;
+  orderId?: string; // Add this to match the backend response for checkout
+  userId?: string;
+  customerName?: string;
+  customerPhone?: string;
+  customerAddress?: string;
+  location?: "INSIDE" | "OUTSIDE";
+  deliveryFee?: number;
   user?: User;
   total: number;
   status: "PENDING" | "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED";
@@ -48,4 +53,25 @@ export interface OrderItem {
   quantity: number;
   price: number;
   cake: Cake;
+}
+
+export interface CustomRequest {
+  id: string;
+  customerName: string;
+  customerPhone: string;
+  customerAddress?: string;
+  location: "INSIDE" | "OUTSIDE";
+  type: string;
+  flavor: string;
+  pounds: number;
+  size: string;
+  features?: string;
+  description?: string;
+  images: string[];
+  whatsappUrl?: string;
+  status: "PENDING" | "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED";
+  price?: number;
+  cost?: number;
+  createdAt: string;
+  updatedAt: string;
 }

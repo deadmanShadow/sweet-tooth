@@ -63,6 +63,10 @@ export class AuthService {
     const user = await this.users.findByEmail(email);
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
+    if (user.role !== UserRole.ADMIN) {
+      throw new UnauthorizedException('Access denied. Only admins can login.');
+    }
+
     const ok = await bcrypt.compare(params.password, user.password);
     if (!ok) throw new UnauthorizedException('Invalid credentials');
 

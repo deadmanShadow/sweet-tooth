@@ -14,7 +14,6 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
 import { authService } from "@/services/api.service";
 import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -75,9 +74,9 @@ function LoginForm() {
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">Login</CardTitle>
+          <CardTitle className="text-2xl font-bold">Staff Login</CardTitle>
           <CardDescription>
-            Enter your email and password to access your account
+            Enter your credentials to access the bakery management system.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -119,13 +118,10 @@ function LoginForm() {
             </Button>
           </form>
         </CardContent>
-        <CardFooter className="flex flex-col space-y-2">
-          <div className="text-center text-sm text-muted-foreground">
-            Don&apos;t have an account?{" "}
-            <Link href="/register" className="text-primary hover:underline">
-              Register
-            </Link>
-          </div>
+        <CardFooter>
+          <p className="text-xs text-center w-full text-muted-foreground">
+            Only authorized bakery staff can access this area.
+          </p>
         </CardFooter>
       </Card>
     </div>

@@ -46,19 +46,17 @@ The frontend is built with a focus on speed, responsiveness, and developer exper
 - **Detail View**: Rich product pages with high-quality images, flavor options, and size selections.
 - **Smart Search**: Quickly find the perfect treat (implemented in admin and browse views).
 
-### 🛒 Shopping & Checkout
-
-- **Persistent Cart**: Items remain in your cart across sessions.
-- **Seamless Checkout**: A streamlined process to finalize orders.
-- **Order Tracking**: Users can view their order history and status in real-time.
-
-### 🛡️ Secure Dashboards
-
-- **User Dashboard**: Manage profile settings and track past orders.
+### 🛡️ Secure Admin Dashboard
+- **Staff-Only Access**: Secure login exclusively for bakery administrators and staff.
 - **Admin Command Center**:
   - **Inventory Management**: Create, update, and delete products with image uploads.
-  - **Order Management**: Oversee all customer orders and update their fulfillment status.
-  - **User Management**: Monitor registered users and manage permissions.
+  - **Order Management**: Oversee all customer orders, including guest details, and update fulfillment status.
+  - **Staff Management**: Monitor authorized staff accounts.
+
+### 📱 Guest Checkout Experience
+- **No Login Required**: Customers can place orders quickly by providing just their name and phone number.
+- **Seamless Flow**: Direct redirection to WhatsApp for order confirmation and personalized service.
+- **Persistent Cart**: Items remain in the guest's cart during their browsing session.
 
 ### 📱 Responsive & Accessible
 
