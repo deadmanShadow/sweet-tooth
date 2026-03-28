@@ -245,7 +245,7 @@ export default function AdminCakesPage() {
                       </div>
                     </TableCell>
                     <TableCell className="py-5 text-right font-black text-lg text-primary">
-                      ${cake.price.toFixed(2)}
+                      ৳{cake.price.toFixed(2)}
                     </TableCell>
                     <TableCell className="py-5 text-center font-bold text-muted-foreground">
                       {cake.pounds || "-"}{" "}

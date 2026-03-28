@@ -19,12 +19,12 @@ export class CreateCustomRequestDto {
   customerPhone: string;
 
   @IsString()
-  @IsOptional()
-  customerAddress?: string;
+  @IsNotEmpty()
+  customerAddress: string;
 
   @IsEnum(OrderLocation)
-  @IsOptional()
-  location?: OrderLocation;
+  @IsNotEmpty()
+  location: OrderLocation;
 
   @IsString()
   @IsNotEmpty()
@@ -40,16 +40,16 @@ export class CreateCustomRequestDto {
   pounds: number;
 
   @IsString()
+  @IsOptional()
+  size?: string;
+
+  @IsString()
   @IsNotEmpty()
-  size: string;
+  features: string;
 
   @IsString()
-  @IsOptional()
-  features?: string;
-
-  @IsString()
-  @IsOptional()
-  description?: string;
+  @IsNotEmpty()
+  description: string;
 
   @IsArray()
   @IsString({ each: true })

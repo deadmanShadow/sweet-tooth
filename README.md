@@ -1,4 +1,4 @@
-# Sweet Tooth - Modern Cake E-commerce Platform
+# Sweet Tooth - Digital Commerce Solution
 
 Sweet Tooth is a high-performance, full-stack e-commerce application built for a premium cake shop experience. It features a sleek, responsive design, a robust backend architecture, and a seamless user journey from product discovery to secure checkout.
 
@@ -47,6 +47,7 @@ The frontend is built with a focus on speed, responsiveness, and developer exper
 - **Smart Search**: Quickly find the perfect treat (implemented in admin and browse views).
 
 ### 🛡️ Secure Admin Dashboard
+
 - **Staff-Only Access**: Secure login exclusively for bakery administrators and staff.
 - **Admin Command Center**:
   - **Inventory Management**: Create, update, and delete products with image uploads.
@@ -54,6 +55,7 @@ The frontend is built with a focus on speed, responsiveness, and developer exper
   - **Staff Management**: Monitor authorized staff accounts.
 
 ### 📱 Guest Checkout Experience
+
 - **No Login Required**: Customers can place orders quickly by providing just their name and phone number.
 - **Seamless Flow**: Direct redirection to WhatsApp for order confirmation and personalized service.
 - **Persistent Cart**: Items remain in the guest's cart during their browsing session.
@@ -68,7 +70,3 @@ The frontend is built with a focus on speed, responsiveness, and developer exper
 ## 🎨 Design Philosophy
 
 Sweet Tooth is designed with a "Content First" approach, emphasizing the beauty of the products through large imagery and a clean, minimalist aesthetic. The use of a refined color palette (oklch-based) and subtle GSAP transitions creates an atmosphere of luxury and quality.
-
----
-
-_Developed by a passionate software engineer focused on building impactful digital experiences._

@@ -108,7 +108,7 @@ model CustomRequest {
   type            String
   flavor          String
   pounds          Float
-  size            String
+  size            String?
   features        String?
   description     String?
   images          String[] @default([])

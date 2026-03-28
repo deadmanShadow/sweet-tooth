@@ -74,7 +74,7 @@ function LoginForm() {
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">Staff Login</CardTitle>
+          <CardTitle className="text-2xl font-bold">Login</CardTitle>
           <CardDescription>
             Enter your credentials to access the bakery management system.
           </CardDescription>
@@ -86,7 +86,6 @@ function LoginForm() {
               <Input
                 id="email"
                 type="email"
-                placeholder="name@example.com"
                 {...register("email")}
                 disabled={isLoading}
               />
@@ -103,7 +102,6 @@ function LoginForm() {
               <Input
                 id="password"
                 type="password"
-                placeholder="*******"
                 {...register("password")}
                 disabled={isLoading}
               />

@@ -64,9 +64,9 @@ export interface CustomRequest {
   type: string;
   flavor: string;
   pounds: number;
-  size: string;
-  features?: string;
-  description?: string;
+  size?: string;
+  features: string;
+  description: string;
   images: string[];
   whatsappUrl?: string;
   status: "PENDING" | "CONFIRMED" | "SHIPPED" | "DELIVERED" | "CANCELLED";

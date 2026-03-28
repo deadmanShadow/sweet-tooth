@@ -246,7 +246,7 @@ export default function AdminOverviewPage() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-black text-primary">
-              ${overview.totalRevenue.toFixed(2)}
+              ৳{overview.totalRevenue.toFixed(2)}
             </div>
             <div className="mt-2 flex items-center gap-1 text-xs text-green-500 font-bold">
               <TrendingUp className="h-3 w-3" />
