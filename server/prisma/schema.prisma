@@ -66,9 +66,9 @@ enum OrderLocation {
 model Order {
   id              String        @id @default(cuid())
   userId          String?
-  customerName    String?
-  customerPhone   String?
-  customerAddress String?
+  customerName    String
+  customerPhone   String
+  customerAddress String
   location        OrderLocation @default(INSIDE)
   deliveryFee     Float         @default(0)
   total           Float

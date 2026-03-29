@@ -36,10 +36,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated } = useAuth();
   const [items, setItems] = useState<CartItem[]>([]);
 
-  // Load cart from localStorage when user changes
+  // Load cart from localStorage when user or auth status changes
   useEffect(() => {
-    if (typeof window !== "undefined" && isAuthenticated && user) {
-      const storageKey = `cart_${user.id}`;
+    if (typeof window !== "undefined") {
+      const storageKey =
+        isAuthenticated && user ? `cart_${user.id}` : "cart_guest";
       const savedCart = localStorage.getItem(storageKey);
       if (savedCart) {
         try {
@@ -52,16 +53,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       } else {
         setItems([]);
       }
-    } else {
-      setItems([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, isAuthenticated]);
 
   // Save cart to localStorage on changes
   useEffect(() => {
-    if (isAuthenticated && user) {
-      const storageKey = `cart_${user.id}`;
+    if (typeof window !== "undefined") {
+      const storageKey =
+        isAuthenticated && user ? `cart_${user.id}` : "cart_guest";
       localStorage.setItem(storageKey, JSON.stringify(items));
     }
   }, [items, user, isAuthenticated]);
@@ -71,10 +71,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     quantity = 1,
     options?: { size?: string; features?: string[] },
   ) => {
-    if (!isAuthenticated) {
-      toast.error("Please login to add items to cart");
-      return;
-    }
+    // No login required to add items to cart anymore!
 
     // Create a unique key for the item based on cakeId and selected options
     const itemKey = `${cake.id}-${options?.size || "default"}-${(options?.features || []).sort().join(",")}`;

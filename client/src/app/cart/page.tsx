@@ -10,7 +10,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { useAuth } from "@/hooks/use-auth";
 import { useCart } from "@/providers/cart-provider";
 import {
   ArrowLeft,
@@ -26,29 +25,6 @@ import Link from "next/link";
 export default function CartPage() {
   const { items, removeItem, updateQuantity, totalPrice, totalItems } =
     useCart();
-  const { isAuthenticated } = useAuth();
-
-  if (!isAuthenticated) {
-    return (
-      <div className="container mx-auto px-4 py-20 text-center">
-        <div className="flex flex-col items-center justify-center space-y-6">
-          <div className="p-6 rounded-full bg-muted">
-            <ShoppingCart className="h-16 w-16 text-muted-foreground" />
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Please login to see your cart
-          </h1>
-          <p className="text-muted-foreground text-lg max-w-md">
-            You need to be logged in to view your saved items and proceed to
-            checkout.
-          </p>
-          <Button size="lg" asChild className="px-8 py-6 text-lg rounded-full">
-            <Link href="/login?redirect=/cart">Login Now</Link>
-          </Button>
-        </div>
-      </div>
-    );
-  }
 
   if (items.length === 0) {
     return (
@@ -61,8 +37,8 @@ export default function CartPage() {
             Your cart is empty
           </h1>
           <p className="text-muted-foreground text-lg max-w-md">
-            Looks like you haven&apos;t added any delicious cakes yet. Browse our
-            selection and satisfy your sweet tooth!
+            Looks like you haven&apos;t added any delicious cakes yet. Browse
+            our selection and satisfy your sweet tooth!
           </p>
           <Button size="lg" asChild className="px-8 py-6 text-lg rounded-full">
             <Link href="/">Browse Cakes</Link>
@@ -208,16 +184,8 @@ export default function CartPage() {
                   ${totalPrice.toFixed(2)}
                 </span>
               </div>
-              <div className="flex justify-between text-muted-foreground">
-                <span>Shipping</span>
-                <span className="font-semibold text-foreground text-green-600">
-                  FREE
-                </span>
-              </div>
-              <div className="flex justify-between text-muted-foreground">
-                <span>Estimated Tax</span>
-                <span className="font-semibold text-foreground">$0.00</span>
-              </div>
+              <div className="flex justify-between text-muted-foreground"></div>
+
               <Separator className="bg-primary/10" />
               <div className="flex justify-between text-xl font-bold pt-2">
                 <span>Total</span>

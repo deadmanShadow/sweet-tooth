@@ -50,10 +50,10 @@ export const userService = {
 export const orderService = {
   create: async (data: {
     items: { cakeId: string; quantity: number }[];
-    customerName?: string;
-    customerPhone?: string;
-    customerAddress?: string;
-    location?: "INSIDE" | "OUTSIDE";
+    customerName: string;
+    customerPhone: string;
+    customerAddress: string;
+    location: "INSIDE" | "OUTSIDE";
   }): Promise<Order> => {
     const response = await api.post("/orders", data);
     return response.data;

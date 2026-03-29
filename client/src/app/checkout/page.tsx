@@ -30,8 +30,23 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+
+const checkoutSchema = z.object({
+  customerName: z.string().min(2, "Name must be at least 2 characters"),
+  customerPhone: z
+    .string()
+    .min(11, "Phone number must be at least 11 characters"),
+  customerAddress: z.string().min(5, "Address must be at least 5 characters"),
+  location: z.enum(["INSIDE", "OUTSIDE"]),
+});
+
+type CheckoutFormValues = z.infer<typeof checkoutSchema>;
 
 export default function CheckoutPage() {
   const { items, totalPrice, clearCart } = useCart();
@@ -42,45 +57,38 @@ export default function CheckoutPage() {
     whatsappUrl?: string;
   } | null>(null);
 
-  // Guest details state
-  const [guestInfo, setGuestInfo] = useState({
-    customerName: user?.name || "",
-    customerPhone: user?.phone || "",
-    customerAddress: "",
-    location: "INSIDE" as "INSIDE" | "OUTSIDE",
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<CheckoutFormValues>({
+    resolver: zodResolver(checkoutSchema),
+    defaultValues: {
+      customerName: user?.name || "",
+      customerPhone: user?.phone || "",
+      customerAddress: "",
+      location: "INSIDE",
+    },
   });
 
-  const deliveryFee = guestInfo.location === "INSIDE" ? 60 : 120;
+  const currentLocation = watch("location");
+
+  // Update info if user changes (logs in/out)
+  useEffect(() => {
+    if (user) {
+      setValue("customerName", user.name || "");
+      setValue("customerPhone", user.phone || "");
+    }
+  }, [user, setValue]);
+
+  const deliveryFee = currentLocation === "INSIDE" ? 60 : 120;
   const finalTotal = totalPrice + deliveryFee;
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    const { id, value } = e.target;
-    setGuestInfo((prev) => ({ ...prev, [id]: value }));
-  };
-
-  const handleLocationChange = (value: string) => {
-    setGuestInfo((prev) => ({
-      ...prev,
-      location: value as "INSIDE" | "OUTSIDE",
-    }));
-  };
-
-  const handlePlaceOrder = async () => {
+  const handlePlaceOrder = async (data: CheckoutFormValues) => {
     if (items.length === 0) {
       toast.error("Your cart is empty");
-      return;
-    }
-
-    if (
-      !guestInfo.customerName ||
-      !guestInfo.customerPhone ||
-      !guestInfo.customerAddress
-    ) {
-      toast.error(
-        "Please provide your name, phone number, and delivery address",
-      );
       return;
     }
 
@@ -92,7 +100,7 @@ export default function CheckoutPage() {
           cakeId: item.cakeId,
           quantity: item.quantity,
         })),
-        ...guestInfo,
+        ...data,
       };
 
       const response = await orderService.create(orderData);
@@ -245,11 +253,16 @@ export default function CheckoutPage() {
                     <Input
                       id="customerName"
                       placeholder="Enter your full name"
-                      value={guestInfo.customerName}
-                      onChange={handleInputChange}
-                      className="bg-background border-none shadow-sm h-12 rounded-xl focus-visible:ring-primary/20"
-                      required
+                      {...register("customerName")}
+                      className={`bg-background border-none shadow-sm h-12 rounded-xl focus-visible:ring-primary/20 ${
+                        errors.customerName ? "ring-2 ring-destructive" : ""
+                      }`}
                     />
+                    {errors.customerName && (
+                      <p className="text-xs font-medium text-destructive">
+                        {errors.customerName.message}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label
@@ -261,11 +274,16 @@ export default function CheckoutPage() {
                     <Input
                       id="customerPhone"
                       placeholder="e.g. 018XXXXXXXX"
-                      value={guestInfo.customerPhone}
-                      onChange={handleInputChange}
-                      className="bg-background border-none shadow-sm h-12 rounded-xl focus-visible:ring-primary/20"
-                      required
+                      {...register("customerPhone")}
+                      className={`bg-background border-none shadow-sm h-12 rounded-xl focus-visible:ring-primary/20 ${
+                        errors.customerPhone ? "ring-2 ring-destructive" : ""
+                      }`}
                     />
+                    {errors.customerPhone && (
+                      <p className="text-xs font-medium text-destructive">
+                        {errors.customerPhone.message}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -274,14 +292,16 @@ export default function CheckoutPage() {
                     <MapPin className="h-3 w-3" /> Delivery Area
                   </Label>
                   <RadioGroup
-                    value={guestInfo.location}
-                    onValueChange={handleLocationChange}
+                    value={currentLocation}
+                    onValueChange={(value) =>
+                      setValue("location", value as "INSIDE" | "OUTSIDE")
+                    }
                     className="grid grid-cols-2 gap-4"
                   >
                     <Label
                       htmlFor="INSIDE"
                       className={`flex flex-col items-center justify-between rounded-xl border-2 bg-background p-4 hover:bg-primary/5 hover:text-primary cursor-pointer transition-all ${
-                        guestInfo.location === "INSIDE"
+                        currentLocation === "INSIDE"
                           ? "border-primary bg-primary/5 text-primary"
                           : "border-muted"
                       }`}
@@ -299,7 +319,7 @@ export default function CheckoutPage() {
                     <Label
                       htmlFor="OUTSIDE"
                       className={`flex flex-col items-center justify-between rounded-xl border-2 bg-background p-4 hover:bg-primary/5 hover:text-primary cursor-pointer transition-all ${
-                        guestInfo.location === "OUTSIDE"
+                        currentLocation === "OUTSIDE"
                           ? "border-primary bg-primary/5 text-primary"
                           : "border-muted"
                       }`}
@@ -327,11 +347,16 @@ export default function CheckoutPage() {
                   <Textarea
                     id="customerAddress"
                     placeholder="Enter your detailed delivery address (House, Road, Area...)"
-                    value={guestInfo.customerAddress}
-                    onChange={handleInputChange}
-                    className="bg-background border-none shadow-sm min-h-[100px] rounded-xl focus-visible:ring-primary/20"
-                    required
+                    {...register("customerAddress")}
+                    className={`bg-background border-none shadow-sm min-h-[100px] rounded-xl focus-visible:ring-primary/20 ${
+                      errors.customerAddress ? "ring-2 ring-destructive" : ""
+                    }`}
                   />
+                  {errors.customerAddress && (
+                    <p className="text-xs font-medium text-destructive">
+                      {errors.customerAddress.message}
+                    </p>
+                  )}
                 </div>
                 <div className="p-4 rounded-xl bg-primary/5 text-primary text-xs flex gap-3 items-start leading-relaxed">
                   <div className="mt-0.5 p-1 rounded-full bg-primary/20">
@@ -402,7 +427,7 @@ export default function CheckoutPage() {
                 <div className="flex justify-between text-muted-foreground">
                   <span>
                     Delivery (
-                    {guestInfo.location === "INSIDE"
+                    {currentLocation === "INSIDE"
                       ? "Inside Cumilla"
                       : "Outside Cumilla"}
                     )
@@ -432,7 +457,7 @@ export default function CheckoutPage() {
                 size="lg"
                 className="w-full h-16 text-xl font-extrabold rounded-xl shadow-lg gap-2"
                 disabled={isPlacingOrder || items.length === 0}
-                onClick={handlePlaceOrder}
+                onClick={handleSubmit(handlePlaceOrder)}
               >
                 {isPlacingOrder ? (
                   <>

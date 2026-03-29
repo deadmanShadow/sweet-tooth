@@ -4,7 +4,6 @@ import {
   IsEnum,
   IsInt,
   IsNotEmpty,
-  IsOptional,
   IsString,
   Min,
   ValidateNested,
@@ -32,18 +31,18 @@ export class CreateOrderDto {
   items!: CreateOrderItemDto[];
 
   @IsString()
-  @IsOptional()
-  customerName?: string;
+  @IsNotEmpty({ message: 'Customer name is required' })
+  customerName!: string;
 
   @IsString()
-  @IsOptional()
-  customerPhone?: string;
+  @IsNotEmpty({ message: 'Customer phone number is required' })
+  customerPhone!: string;
 
   @IsString()
-  @IsOptional()
-  customerAddress?: string;
+  @IsNotEmpty({ message: 'Delivery address is required' })
+  customerAddress!: string;
 
   @IsEnum(OrderLocation)
-  @IsOptional()
-  location?: OrderLocation;
+  @IsNotEmpty({ message: 'Delivery location is required' })
+  location!: OrderLocation;
 }
