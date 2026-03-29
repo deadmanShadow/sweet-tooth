@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { OrderStatus, Prisma } from '@prisma/client';
+import { OrderLocation, OrderStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { QueryOrderDto } from './dto/query-order.dto';
@@ -146,7 +146,8 @@ export class OrdersService {
     // Use Prisma transaction to create order and items
     const order = await this.prisma.$transaction(async (tx) => {
       // Securely calculate delivery fee on the backend
-      const deliveryFee = dto.location === 'OUTSIDE' ? 120 : 60;
+      const deliveryFee =
+        (dto.location as string) === OrderLocation.OUTSIDE ? 120 : 60;
       const finalTotal = total + deliveryFee;
 
       return tx.order.create({
@@ -155,7 +156,7 @@ export class OrdersService {
           customerName: dto.customerName,
           customerPhone: dto.customerPhone,
           customerAddress: dto.customerAddress,
-          location: dto.location,
+          location: dto.location || OrderLocation.INSIDE,
           deliveryFee,
           total: finalTotal,
           status: OrderStatus.PENDING,

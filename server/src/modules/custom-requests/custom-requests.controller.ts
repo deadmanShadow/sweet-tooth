@@ -44,11 +44,16 @@ export class CustomRequestsController {
               folder: 'sweet-tooth/custom-requests',
             },
             (error, result) => {
-              if (error) return reject(error);
+              if (error) return reject(new Error(error.message));
               resolve(result?.secure_url || '');
             },
           );
-          uploadStream.end(file.buffer);
+          if (file && typeof file === 'object' && 'buffer' in file) {
+            const buffer = (file as { buffer: Buffer }).buffer;
+            uploadStream.end(buffer);
+          } else {
+            reject(new Error('File buffer is empty'));
+          }
         });
       });
       imageUrls = await Promise.all(uploadPromises);

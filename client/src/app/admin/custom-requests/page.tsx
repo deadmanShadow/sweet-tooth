@@ -63,7 +63,7 @@ import {
   User,
 } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 const STATUS_OPTIONS = [
@@ -102,26 +102,32 @@ export default function AdminCustomRequestsPage() {
   );
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const fetchRequests = async (page = 1) => {
-    try {
-      setIsLoading(true);
-      const params: any = { page, limit: 10 };
-      if (statusFilter !== "all") params.status = statusFilter;
+  const fetchRequests = useCallback(
+    async (page = 1) => {
+      try {
+        setIsLoading(true);
+        const params: { page: number; limit: number; status?: string } = {
+          page,
+          limit: 10,
+        };
+        if (statusFilter !== "all") params.status = statusFilter;
 
-      const data = await customRequestService.getAll(params);
-      setRequests(data.items);
-      setMeta(data.meta);
-    } catch (error) {
-      console.error("Failed to fetch custom requests:", error);
-      toast.error("Failed to load requests");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        const data = await customRequestService.getAll(params);
+        setRequests(data.items);
+        setMeta(data.meta);
+      } catch (error) {
+        console.error("Failed to fetch custom requests:", error);
+        toast.error("Failed to load requests");
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [statusFilter],
+  );
 
   useEffect(() => {
     fetchRequests(1);
-  }, [statusFilter]);
+  }, [fetchRequests]);
 
   const handleStatusUpdate = async (id: string, newStatus: string) => {
     if (newStatus === "CONFIRMED") {
@@ -179,10 +185,10 @@ export default function AdminCustomRequestsPage() {
       setIsDeleteDialogOpen(false);
       setDeletingRequestId(null);
       fetchRequests(meta.page);
-    } catch (error: any) {
+    } catch (error) {
       console.error("Failed to delete request:", error);
       const errorMessage =
-        error.response?.data?.message || "Failed to delete request";
+        error instanceof Error ? error.message : "Failed to delete request";
       toast.error(errorMessage);
     } finally {
       setIsDeleting(false);

@@ -102,7 +102,7 @@ export class CustomRequestsService {
     });
     if (!existing) throw new NotFoundException('Custom request not found');
 
-    const updateData: any = { status };
+    const updateData: Prisma.CustomRequestUpdateInput = { status };
     if (price !== undefined) updateData.price = price;
     if (cost !== undefined) updateData.cost = cost;
 

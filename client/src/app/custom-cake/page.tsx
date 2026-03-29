@@ -126,9 +126,13 @@ export default function CustomCakePage() {
       }
 
       router.push("/");
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error submitting custom request:", error);
-      toast.error(error.response?.data?.message || "Failed to submit request");
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to submit request";
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
