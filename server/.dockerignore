@@ -1,0 +1,15 @@
+node_modules
+dist
+npm-debug.log
+.env
+.env.local
+.git
+.gitignore
+README.md
+Dockerfile
+.dockerignore
+prisma/migrations
+test
+coverage
+*.spec.ts
+*.test.ts
