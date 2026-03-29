@@ -77,6 +77,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Verify Secrets
+        id: prep
         run: |
           if [ -z "${{ secrets.DOCKERHUB_USERNAME }}" ]; then
             echo "Error: DOCKERHUB_USERNAME secret is not set."
@@ -86,6 +87,11 @@ jobs:
             echo "Error: DOCKERHUB_TOKEN secret is not set."
             exit 1
           fi
+
+          # Sanitize DOCKERHUB_USERNAME to remove any trailing whitespace/newlines
+          DOCKERHUB_USERNAME=$(echo "${{ secrets.DOCKERHUB_USERNAME }}" | tr -d '[:space:]')
+          echo "server_image=${DOCKERHUB_USERNAME}/sweet-tooth-server" >> $GITHUB_OUTPUT
+          echo "client_image=${DOCKERHUB_USERNAME}/sweet-tooth-client" >> $GITHUB_OUTPUT
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -100,7 +106,7 @@ jobs:
         id: meta-server
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/sweet-tooth-server
+          images: ${{ steps.prep.outputs.server_image }}
           tags: |
             type=raw,value=latest
 
@@ -116,7 +122,7 @@ jobs:
         id: meta-client
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/sweet-tooth-client
+          images: ${{ steps.prep.outputs.client_image }}
           tags: |
             type=raw,value=latest
 
