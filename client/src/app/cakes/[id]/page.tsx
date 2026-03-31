@@ -94,7 +94,7 @@ export default function CakeDetailsPage() {
           <Info className="h-12 w-12" />
         </div>
         <h2 className="text-3xl font-black text-slate-800 mb-4 tracking-tight">Cake Not Found</h2>
-        <p className="text-slate-500 mb-8 max-w-md mx-auto">The cake you're looking for might have been moved or is no longer available in our kitchen.</p>
+        <p className="text-slate-500 mb-8 max-w-md mx-auto">The cake you&apos re looking for might have been moved or is no longer available in our kitchen.</p>
         <Button onClick={() => router.push('/')} className="rounded-full px-8 h-12 font-bold">
           Return to Bakery
         </Button>
