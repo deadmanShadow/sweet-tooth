@@ -233,6 +233,12 @@ export function CakeForm({ initialData }: CakeFormProps) {
                 id="price"
                 type="number"
                 step="0.01"
+                min="0"
+                onKeyDown={(e) => {
+                  if (e.key === "-" || e.key === "e") {
+                    e.preventDefault();
+                  }
+                }}
                 {...register("price", { valueAsNumber: true })}
               />
               {errors.price && (
@@ -248,7 +254,27 @@ export function CakeForm({ initialData }: CakeFormProps) {
                 id="pounds"
                 type="number"
                 step="0.1"
+                min="0.5"
                 {...register("pounds", { valueAsNumber: true })}
+                onKeyDown={(e) => {
+                  if (["-", "e", "E", "+"].includes(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
+                onInput={(e) => {
+                  const target = e.target as HTMLInputElement;
+                  if (target.value && Number(target.value) < 0.5) {
+                    if (target.value.startsWith("-")) {
+                      target.value = target.value.replace("-", "");
+                    }
+                  }
+                }}
+                onPaste={(e) => {
+                  const data = e.clipboardData.getData("text");
+                  if (data.includes("-") || isNaN(Number(data))) {
+                    e.preventDefault();
+                  }
+                }}
               />
               {errors.pounds && (
                 <p className="text-sm text-destructive">

@@ -124,7 +124,7 @@ export default function CakeDetailsPage() {
           </div>
           <h1 className="text-4xl font-extrabold tracking-tight mb-2">{cake.name}</h1>
           <div className="flex items-center gap-4 mb-6">
-            <span className="text-3xl font-bold text-primary">${cake.price.toFixed(2)}</span>
+            <span className="text-3xl font-bold text-primary">৳{cake.price.toFixed(2)}</span>
             {cake.pounds && (
               <span className="text-muted-foreground">Approx. {cake.pounds} lbs</span>
             )}

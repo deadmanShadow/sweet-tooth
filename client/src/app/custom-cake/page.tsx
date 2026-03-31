@@ -401,8 +401,28 @@ export default function CustomCakePage() {
                         id="pounds"
                         type="number"
                         step="0.5"
+                        min="0.5"
                         placeholder="1.5"
                         {...register("pounds")}
+                        onKeyDown={(e) => {
+                          if (["-", "e", "E", "+"].includes(e.key)) {
+                            e.preventDefault();
+                          }
+                        }}
+                        onInput={(e) => {
+                          const target = e.target as HTMLInputElement;
+                          if (target.value && Number(target.value) < 0.5) {
+                            if (target.value.startsWith("-")) {
+                              target.value = target.value.replace("-", "");
+                            }
+                          }
+                        }}
+                        onPaste={(e) => {
+                          const data = e.clipboardData.getData("text");
+                          if (data.includes("-") || isNaN(Number(data))) {
+                            e.preventDefault();
+                          }
+                        }}
                         className={cn(
                           "h-12 px-4 pr-16 rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white transition-all",
                           errors.pounds &&

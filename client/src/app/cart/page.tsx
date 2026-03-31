@@ -124,7 +124,7 @@ export default function CartPage() {
                         </div>
                       </div>
                       <p className="text-xl font-bold">
-                        ${(item.price * item.quantity).toFixed(2)}
+                        ৳{(item.price * item.quantity).toFixed(2)}
                       </p>
                     </div>
 
@@ -181,7 +181,7 @@ export default function CartPage() {
               <div className="flex justify-between text-muted-foreground">
                 <span>Subtotal</span>
                 <span className="font-semibold text-foreground">
-                  ${totalPrice.toFixed(2)}
+                  ৳{totalPrice.toFixed(2)}
                 </span>
               </div>
               <div className="flex justify-between text-muted-foreground"></div>
@@ -189,7 +189,7 @@ export default function CartPage() {
               <Separator className="bg-primary/10" />
               <div className="flex justify-between text-xl font-bold pt-2">
                 <span>Total</span>
-                <span className="text-primary">${totalPrice.toFixed(2)}</span>
+                <span className="text-primary">৳{totalPrice.toFixed(2)}</span>
               </div>
             </CardContent>
             <CardFooter className="flex flex-col pt-6 pb-8 px-6">

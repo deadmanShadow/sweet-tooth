@@ -31,61 +31,61 @@ export class WhatsAppService {
       order.location === 'INSIDE' ? 'Inside Cumilla' : 'Outside Cumilla';
     const subtotal = order.total - order.deliveryFee;
 
-    return `🧁 *New Cake Order Request*
+    return `*New Cake Order Request*
 
-🆔 Order ID: #${order.id.slice(-8).toUpperCase()}
+Order ID: #${order.id.slice(-8).toUpperCase()}
 
 ━━━━━━━━━━━━━━━
-📦 *Order Details:*
+ *Order Details:*
 
 ${itemsList}
 
 ━━━━━━━━━━━━━━━
-💰 *Pricing:*
+*Pricing:*
 Subtotal: ${subtotal} BDT
 Delivery Fee: ${order.deliveryFee} BDT
 Total: ${order.total} BDT
 
 ━━━━━━━━━━━━━━━
-🚚 *Delivery Information:*
+*Delivery Information:*
 Name: ${customerName}
 Phone: ${customerPhone}
 Address: ${customerAddress}
 Location: ${locationStr}
 
 ━━━━━━━━━━━━━━━
-📝 *Note:*
+*Note:*
 Please confirm this order and provide delivery time.
 
-Thank you! 😊`;
+Thank you!`;
   }
 
   generateCustomRequestMessage(request: CustomRequest): string {
     const imagesList =
       request.images.length > 0
-        ? `📸 Images attached in form`
-        : '📸 No images attached';
+        ? ` Images attached in form`
+        : 'No images attached';
 
-    return `🎂 *Custom Cake Request*
+    return ` *Custom Cake Request*
 
 ━━━━━━━━━━━━━━━
-👤 *Customer Info:*
+ *Customer Info:*
 Name: ${request.customerName}
 Phone: ${request.customerPhone}
 
 ━━━━━━━━━━━━━━━
-🧁 *Cake Details:*
+ *Cake Details:*
 Type: ${request.type}
 Flavor: ${request.flavor}
 Weight: ${request.pounds} pounds
 Size: ${request.size}
 
 ━━━━━━━━━━━━━━━
-✨ *Special Features:*
+*Special Features:*
 ${request.features || 'None'}
 
 ━━━━━━━━━━━━━━━
-📝 *Description:*
+*Description:*
 ${request.description || 'No description provided'}
 
 ━━━━━━━━━━━━━━━
@@ -93,7 +93,7 @@ ${imagesList}
 
 Please review and let me know the price & availability.
 
-Thank you! 😊`;
+Thank you! `;
   }
 
   getWhatsAppLink(message: string): string {

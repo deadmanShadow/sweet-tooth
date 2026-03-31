@@ -390,12 +390,12 @@ export default function AdminOverviewPage() {
                       fontSize: 12,
                       fontWeight: 700,
                     }}
-                    tickFormatter={(value) => `$${value}`}
+                    tickFormatter={(value) => `৳${value}`}
                   />
                   <Tooltip
                     cursor={{ fill: "oklch(0.65 0.16 280 / 0.05)" }}
                     formatter={(value: unknown) => [
-                      `$${Number(value || 0).toFixed(2)}`,
+                      `৳${Number(value || 0).toFixed(2)}`,
                       "Revenue",
                     ]}
                     contentStyle={{

@@ -7,6 +7,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  Min,
 } from 'class-validator';
 
 export class CreateCustomRequestDto {
@@ -37,6 +38,7 @@ export class CreateCustomRequestDto {
   @IsNumber()
   @Type(() => Number)
   @IsNotEmpty()
+  @Min(0.5)
   pounds: number;
 
   @IsString()
