@@ -76,7 +76,7 @@ function LoginForm() {
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold">Login</CardTitle>
           <CardDescription>
-            Enter your credentials to access the bakery management system.
+            Enter your credentials to access.
           </CardDescription>
         </CardHeader>
         <CardContent>
