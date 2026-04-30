@@ -16,13 +16,25 @@ export class PrismaService
 
   constructor(private readonly config: ConfigService) {
     const nodeEnv = config.get<string>('nodeEnv', 'development');
+    const databaseUrl = config.get<string>('databaseUrl');
 
     super({
+      datasources: {
+        db: {
+          url: databaseUrl,
+        },
+      },
       log:
         nodeEnv === 'development'
           ? ['query', 'warn', 'error']
           : ['warn', 'error'],
     });
+
+    if (!databaseUrl) {
+      this.logger.error(
+        'DATABASE_URL is not defined in the environment variables',
+      );
+    }
   }
 
   async onModuleInit() {

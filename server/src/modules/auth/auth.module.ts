@@ -12,9 +12,17 @@ import { RolesGuard } from './guards/roles.guard';
     UsersModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        secret: config.get<string>('jwt.accessSecret'),
-      }),
+      useFactory: (config: ConfigService) => {
+        const secret = config.get<string>('jwt.accessSecret');
+        if (!secret && process.env.NODE_ENV === 'production') {
+          throw new Error(
+            'JWT_SECRET is required in production but was not provided',
+          );
+        }
+        return {
+          secret: secret || 'development_secret',
+        };
+      },
     }),
   ],
   controllers: [AuthController],

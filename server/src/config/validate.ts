@@ -16,10 +16,10 @@ export const envValidationSchema = Joi.object({
     .valid('fatal', 'error', 'warn', 'info', 'debug', 'trace')
     .default('info'),
 
-  DATABASE_URL: Joi.string().uri().required(),
+  DATABASE_URL: Joi.string().uri().optional(),
   DIRECT_URL: Joi.string().uri().optional(),
 
-  JWT_SECRET: Joi.string().min(8).required(),
+  JWT_SECRET: Joi.string().min(8).optional(),
   JWT_EXPIRES_IN: Joi.string().default('1d'),
 
   ADMIN_EMAIL: Joi.string().email().optional(),
