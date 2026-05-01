@@ -20,7 +20,6 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 interface CakeDetailsClientProps {
@@ -28,7 +27,6 @@ interface CakeDetailsClientProps {
 }
 
 export default function CakeDetailsClient({ cake }: CakeDetailsClientProps) {
-  const router = useRouter();
   const { addItem } = useCart();
 
   const [selectedSize, setSelectedSize] = useState<string>(
