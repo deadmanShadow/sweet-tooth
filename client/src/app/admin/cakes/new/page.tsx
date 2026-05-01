@@ -1,5 +1,3 @@
-"use client";
-
 import { CakeForm } from "@/components/admin/cake-form";
 
 export default function NewCakePage() {

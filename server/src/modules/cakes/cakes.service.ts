@@ -95,19 +95,25 @@ export class CakesService {
     if (!existing) throw new NotFoundException('Cake not found');
 
     if (existing.image) {
-      // Extract publicId from Cloudinary URL
-      // Example: https://res.cloudinary.com/cloud_name/image/upload/v12345678/sweet-tooth/cakes/filename.jpg
-      const parts = existing.image.split('/');
-      const filename = parts.pop()?.split('.')[0];
-      const folder = parts.slice(-2).join('/'); // 'sweet-tooth/cakes'
-      const publicId = `${folder}/${filename}`;
+      try {
+        const url = new URL(existing.image);
+        const parts = url.pathname.split('/');
+        const uploadIndex = parts.indexOf('upload');
+        if (uploadIndex !== -1) {
+          const afterUpload = parts.slice(uploadIndex + 1);
+          const publicIdWithExtension = afterUpload[0].startsWith('v') 
+            ? afterUpload.slice(1).join('/')
+            : afterUpload.join('/');
+          const publicId = publicIdWithExtension.split('.')[0];
 
-      await this.cloudinary.deleteImage(publicId).catch((err) => {
-        console.warn(`Failed to delete Cloudinary image ${publicId}:`, err);
-      });
+          await this.cloudinary.deleteImage(publicId).catch((err) => {
+            console.warn(`Failed to delete Cloudinary image ${publicId}:`, err);
+          });
+        }
+      } catch (e) {
+        console.warn(`Failed to parse image URL ${existing.image}:`, e);
+      }
     }
-
-    // Manually delete associated order items to satisfy foreign key constraint
     await this.prisma.orderItem.deleteMany({ where: { cakeId: id } });
 
     await this.prisma.cake.delete({ where: { id } });
